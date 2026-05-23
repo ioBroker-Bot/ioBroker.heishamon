@@ -177,7 +177,9 @@ Diese Datenpunkte repräsentieren die Steuerausgänge der optionalen PCB (Zubeh�
 
 ## Tabelle 3: Extra-16-Bit-Datenpunkte (XTOP0–XTOP5)
 
-Diese Datenpunkte sind 16-Bit-Werte aus zwei aufeinanderfolgenden Bytes des 203-Byte-Frames.
+Diese Datenpunkte stammen aus einem **separaten Frame** — dem Extra-Block-Response (`0x71 0xC8 ... 0x01 0x21 ...`), nicht aus der normalen Haupt-Antwort. Siehe [frames.md, Abschnitt 3b](frames.md). Der Extra-Block wird nur bei K/L-Serien-Wärmepumpen unterstützt; die Erkennung erfolgt anhand Byte 199 (`0xc7`) der normalen Antwort (`≥ 0x03`).
+
+Bytes-Angaben unten sind Offsets im **Extra-Block-Frame**, nicht in der normalen Antwort. Werte sind 16-Bit little-endian (zwei aufeinanderfolgende Bytes).
 
 | ID | Name | Bytes | Decoder | Einheit | Beschreibung | Range | Schreibbar |
 |:---|:---|:---:|:---|:---|:---|:---|:---|

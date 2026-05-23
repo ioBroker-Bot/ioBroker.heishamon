@@ -9,10 +9,14 @@ Die ersten beiden Bytes identifizieren den Frame-Typ. Beobachtet in [commands.cp
 | Header | Bedeutung | Richtung |
 |--------|-----------|----------|
 | `0x31 0x05` | Initial-Handshake | Master → WP |
-| `0x71 0x6C` | Haupt-Poll (Read-Request) | Master → WP |
-| `0x71 0xC8` | Haupt-Antwort (Response) | WP → Master |
-| `0xF1 0x6C` | Haupt-Set (Write-Command) | Master → WP |
-| `0xF1 0x11` | Optional-PCB-Poll | Master → WP |
+| `0x71 0x6C ... 0x01 0x10` | Haupt-Poll (Read-Request) | Master → WP |
+| `0x71 0x6C ... 0x01 0x21` | Extra-Block-Poll (nur K/L-Serie) | Master → WP |
+| `0x71 0xC8 ... 0x01 0x10` | Haupt-Antwort | WP → Master |
+| `0x71 0xC8 ... 0x01 0x21` | Extra-Block-Antwort (nur K/L-Serie) | WP → Master |
+| `0xF1 0x6C ... 0x01 0x10` | Haupt-Set (Write-Command) | Master → WP |
+| `0xF1 0x11 ... 0x01 0x50` | Optional-PCB-Poll | Master → WP |
+
+Genauer: die ersten zwei Bytes klassifizieren grob (`31`/`71`/`F1` = Handshake/Read/Write), und das **vierte Byte** (`0x10` vs. `0x21` vs. `0x50`) entscheidet zwischen Haupt-, Extra- und Optional-PCB-Block.
 
 Muster: Erstes Byte `0x31`/`0x71`/`0xF1` unterscheidet **Handshake/Read/Write**, zweites Byte unterscheidet **Inhalt/Richtung** (Poll vs. Response: `0x6C` vs. `0xC8`).
 
@@ -43,6 +47,17 @@ Quelle der Header-Bytes im Code:
 - **Header:** `71 C8 01 10 ...` (siehe Beispiel "ans" in [chksumChecker.js](../../vendor/heishamon-upstream/Tools/chksumChecker.js))
 - **Payload:** 199 Bytes Telemetrie (Byte-Offset 4 bis 202), Checksum bei Offset 202.
 - **Inhalt:** 144 Haupt-Datenpunkte + 6 Extra-16-Bit-Power-Werte werden aus diesem Frame dekodiert. Mapping siehe [datapoints.md](datapoints.md) (entsteht im nächsten Phase-0-Schritt).
+
+### 3b. Extra-Block-Poll und -Antwort (nur K/L-Serie)
+
+- **Größe Poll:** wie Haupt-Poll, 110 + 1 = **111 Bytes**. **Einziger Unterschied:** Byte 3 = `0x21` statt `0x10`.
+- **Quelle Send-Trigger:** [HeishaMon.ino:1884](../../vendor/heishamon-upstream/HeishaMon/HeishaMon.ino#L1884) und [HeishaMon.ino:871](../../vendor/heishamon-upstream/HeishaMon/HeishaMon.ino#L871). HeishaMon **wechselt zwischen Haupt-Poll und Extra-Poll** je Iteration.
+- **Größe Antwort:** vermutlich ebenfalls 203 Bytes (zu verifizieren mit realer Aufzeichnung).
+- **Header Antwort:** `0x71 0xC8 ... 0x01 0x21 ...` (siehe [ProtocolByteDecrypt-extra.md](../../vendor/heishamon-upstream/ProtocolByteDecrypt-extra.md))
+- **Inhalt:** 6 zusätzliche 16-Bit-Energiewerte (XTOP0–XTOP5), little-endian, an festen Offsets. Diese sind die "Extra"-Datenpunkte in [datapoints.md](datapoints.md) Tabelle 3.
+- **Verfügbarkeits-Erkennung:** [HeishaMon.ino:740](../../vendor/heishamon-upstream/HeishaMon/HeishaMon.ino#L740) — wenn in der **normalen** Antwort Byte 199 (`actData[0xc7]`) ≥ `0x03` ist, gilt die WP als K/L-Serie und der Extra-Poll wird aktiviert.
+
+Für unsere TS-Implementierung: gleiche `panasonicQuery`-Funktion, nur Byte 3 auf `0x21` setzen vor dem Senden. Antwort-Decoder muss ebenfalls nach Byte 3 verzweigen (`0x10` → main-decoder, `0x21` → extra-decoder).
 
 ### 4. Haupt-Set (Write-Command)
 
