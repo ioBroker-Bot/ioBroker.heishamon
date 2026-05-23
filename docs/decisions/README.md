@@ -43,3 +43,4 @@ Was sich daraus ergibt, welche Folgekosten/-vorteile entstehen.
 - [0003-simulator-first.md](0003-simulator-first.md) — Simulator vor Adapter-Entwicklung
 - [0004-datapoint-naming.md](0004-datapoint-naming.md) — HeishaMon-MQTT-Topic-Namen als Kanon
 - [0005-agent-workflow.md](0005-agent-workflow.md) — Coding-/Review-/Explore-Agents als Standardwerkzeuge
+- [0006-vitest.md](0006-vitest.md) — Vitest als Test-Runner

@@ -1,0 +1,28 @@
+{
+  "name": "iobroker-heishamon-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo for the ioBroker Panasonic Aquarea (HeishaMon-compatible) adapter — protocol library, simulator, and adapter packages.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}

@@ -3,7 +3,7 @@
 ## Code
 
 - **Sprache:** TypeScript für alle Pakete (Adapter, Bibliothek, Simulator). Strict mode an.
-- **Test-Runner:** Vitest (oder Jest — Entscheidung in [../decisions/](../decisions/) festhalten, sobald getroffen).
+- **Test-Runner:** Vitest (siehe [../decisions/0006-vitest.md](../decisions/0006-vitest.md)).
 - **Style:** ESLint + Prettier mit Defaults, keine Custom-Rules ohne Begründung.
 - **Module:** ESM, kein CommonJS außer wo ioBroker es erzwingt.
 - **Naming:** Datenpunkt-Schlüssel im Adapter und in `heishamon-protocol` sind **identisch zu den HeishaMon-MQTT-Topic-Suffixen** (case-sensitive). Das ist Pflicht, kein Vorschlag.
