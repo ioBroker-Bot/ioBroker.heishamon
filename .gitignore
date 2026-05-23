@@ -1,0 +1,38 @@
+# Node.js / TypeScript
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Coverage / test output
+coverage/
+.nyc_output/
+
+# Captured protocol dumps from the heat pump or simulator (potentially large, may contain secrets in future)
+captures/
+*.cap
+*.pcap
+
+# Local-only scratch
+scratch/
+tmp/
