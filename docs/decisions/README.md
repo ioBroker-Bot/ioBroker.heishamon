@@ -42,3 +42,4 @@ Was sich daraus ergibt, welche Folgekosten/-vorteile entstehen.
 - [0002-monorepo-structure.md](0002-monorepo-structure.md) — npm-Workspaces mit `packages/`
 - [0003-simulator-first.md](0003-simulator-first.md) — Simulator vor Adapter-Entwicklung
 - [0004-datapoint-naming.md](0004-datapoint-naming.md) — HeishaMon-MQTT-Topic-Namen als Kanon
+- [0005-agent-workflow.md](0005-agent-workflow.md) — Coding-/Review-/Explore-Agents als Standardwerkzeuge

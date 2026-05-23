@@ -7,6 +7,7 @@ Hierarchischer Einstieg in alle Projektdokumente.
 - **[plan/](plan/)** — Phasenplan. Was machen wir wann, mit welchen Exit-Kriterien.
 - **[memory/](memory/)** — Was dauerhaft über Sessions hinweg gelten soll: Projektziele, User-Profil, Konventionen.
 - **[decisions/](decisions/)** — Architecture Decision Records. Eine ADR je relevanter Entscheidung, nummeriert.
+- **[agent-prompts/](agent-prompts/)** — Rollen-Definitionen für Coding- und Review-Sub-Agenten.
 - **[protocol/](protocol/)** — Ergebnisse der Protokoll-Analyse aus Phase 0 (Frame-Layout, CRC, Datenpunktliste).
 
 ## Schreibkonventionen

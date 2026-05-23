@@ -31,3 +31,11 @@
 
 - Bei wichtigen neuen Erkenntnissen, die über Sessions hinweg gelten sollen, in `docs/memory/` festhalten. Bestehende Dateien updaten statt neue anlegen.
 - Was nicht in Memory gehört: Tagesgeschäft, in-progress-State (das gehört in Plan-Dateien oder ist transient).
+
+## Agent-Workflow
+
+- **Coding-Aufgaben** laufen über einen Sub-Agenten mit dem Prompt aus [../agent-prompts/coding-agent.md](../agent-prompts/coding-agent.md). Eigenes Context-Window, eigene Verantwortung für saubere TS-Qualität.
+- **Code-Reviews** laufen über einen Sub-Agenten mit dem Prompt aus [../agent-prompts/review-agent.md](../agent-prompts/review-agent.md).
+- **Reviews sind token-intensiv** und werden **nur nach expliziter Absprache mit dem User** angestoßen, nicht automatisch nach jeder Änderung.
+- **Recherche** (Code lesen, Symbole finden, Doku-Abgleich) läuft über den eingebauten `Explore`-Subagenten — eigenes Context-Window, hält den Hauptkontext sauber.
+- Siehe [../decisions/0005-agent-workflow.md](../decisions/0005-agent-workflow.md) für den Hintergrund.
