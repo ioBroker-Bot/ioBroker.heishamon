@@ -42,7 +42,7 @@ Spätere Phasen ergänzen:
 |-------|--------|--------|
 | 0 | Protokoll-Audit & Reverse-Engineering der HeishaMon-Quellen | ✅ abgeschlossen — siehe [docs/protocol/](docs/protocol/) |
 | 1 | TypeScript-Bibliothek `heishamon-protocol` | ✅ abgeschlossen — 316 Tests, 5 Module |
-| 2 | Wärmepumpen-Simulator | offen |
+| 2 | Wärmepumpen-Simulator | 🟡 in-process komplett (190 Tests), Hardware-Test gegen echtes HeishaMon ausstehend |
 | 3 | ioBroker-Adapter | offen |
 | 4 | Read-Only-Parallelbetrieb & Cut-Over | offen |
 
