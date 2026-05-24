@@ -1,0 +1,40 @@
+{
+  "name": "heishamon-sim",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Panasonic Aquarea heat-pump simulator. Acts as the heat pump on the wire so the ioBroker adapter can be developed and validated without touching the real device.",
+  "type": "module",
+  "bin": {
+    "heishamon-sim": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/cli.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src test --ext .ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "heishamon-protocol": "*",
+    "serialport": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}
