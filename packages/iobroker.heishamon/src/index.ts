@@ -12,3 +12,17 @@ export type {
   ObjectTree,
   StateObjectDefinition,
 } from './object-tree.js';
+
+export { SerialAdapterTransport } from './transport.js';
+export type {
+  AdapterTransport,
+  LogLevel,
+  Logger,
+  SerialAdapterTransportOptions,
+} from './transport.js';
+
+export { Poller } from './poller.js';
+export type { PollerOptions, PollerTimers } from './poller.js';
+
+export { StateApplier } from './state-applier.js';
+export type { SetStateFn, StateApplierOptions } from './state-applier.js';
