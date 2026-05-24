@@ -1,6 +1,0 @@
-[submodule "Integrations/Domoticz/HeishamonMQTT"]
-	path = Integrations/Domoticz/HeishamonMQTT
-	url = https://github.com/MarFanNL/HeishamonMQTT
-[submodule "Integrations/NodeRed"]
-	path = Integrations/NodeRed
-	url = https://github.com/edterbak/NodeRed_Heishamon_control

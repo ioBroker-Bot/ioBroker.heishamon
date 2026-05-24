@@ -36,3 +36,14 @@ captures/
 # Local-only scratch
 scratch/
 tmp/
+
+# Claude Code local data
+.claude/
+
+# HeishaMon-Upstream-Snapshot — siehe README ("Lokales Setup").
+# Nicht im Repo, weil HeishaMon keine explizite Lizenz hat (vgl.
+# vendor/heishamon-upstream/LICENSE-NOTE.md). Der Snapshot wird lokal
+# zur Referenz gehalten, fließt aber nicht in den Build/die Tests ein —
+# alle Test-Fixtures sind unter packages/heishamon-protocol/test/fixtures/
+# als JSON eingecheckt.
+vendor/heishamon-upstream/
