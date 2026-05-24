@@ -4,6 +4,7 @@ Persistenter Projekt-Kontext: was zu jedem Zeitpunkt über das Projekt, den Benu
 
 ## Aktuelle Memories
 
+- [status.md](status.md) — **Aktueller Stand**: Phasen, Tests, offene Lücken (wird bei jedem Meilenstein aktualisiert)
 - [project-goal.md](project-goal.md) — Was wir bauen und warum
 - [user-profile.md](user-profile.md) — Wer den Adapter entwickelt und betreibt
 - [conventions.md](conventions.md) — Code-, Doku- und Workflow-Konventionen
