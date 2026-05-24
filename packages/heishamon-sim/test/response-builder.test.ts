@@ -23,14 +23,6 @@ function withOverrides(overrides: HeatPumpState): HeatPumpState {
   return { ...createDefaultState(), ...overrides };
 }
 
-function findMain(name: string): DataPoint {
-  const datapoint = MAIN_DATAPOINTS.find((entry) => entry.name === name);
-  if (datapoint === undefined) {
-    throw new Error(`unknown main datapoint: ${name}`);
-  }
-  return datapoint;
-}
-
 describe('buildMainResponse', () => {
   it('produces a 203-byte frame', () => {
     const frame = buildMainResponse(createDefaultState());
