@@ -10,3 +10,10 @@ export type { DataPoint, DecoderKind, FrameSource } from './datapoints.js';
 export { decodeExtraFrame, decodeMainFrame, decodeOptionalFrame } from './decoder.js';
 export type { DecodedFrame } from './decoder.js';
 export type { DecodedValue } from './decoders.js';
+export {
+  FRAME_LENGTHS,
+  buildFrame,
+  createTemplate,
+  identifyFrame,
+} from './frames.js';
+export type { FrameType } from './frames.js';
