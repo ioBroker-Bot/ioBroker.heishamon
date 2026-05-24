@@ -9,7 +9,7 @@ Das Projekt ist in fünf Phasen gegliedert. Jede Phase hat ein klares Deliverabl
 | 0 | Recon & Protokoll-Audit | ✅ abgeschlossen | [`docs/protocol/`](../protocol/) gefüllt | [phase-0-recon.md](phase-0-recon.md) |
 | 1 | Protokoll-Bibliothek (TS) | ✅ abgeschlossen | [`packages/heishamon-protocol/`](../../packages/heishamon-protocol/), 316 Tests | [phase-1-protocol-lib.md](phase-1-protocol-lib.md) |
 | 2 | WP-Simulator | 🟡 in-process komplett, Hardware-Test ausstehend | [`packages/heishamon-sim/`](../../packages/heishamon-sim/), 190 Tests | [phase-2-simulator.md](phase-2-simulator.md) |
-| 3 | ioBroker-Adapter | offen | `packages/iobroker.heishamon/` | [phase-3-adapter.md](phase-3-adapter.md) |
+| 3 | ioBroker-Adapter | 🟡 in-process komplett, Install/Test in ioBroker offen | [`packages/iobroker.heishamon/`](../../packages/iobroker.heishamon/), 30 Tests | [phase-3-adapter.md](phase-3-adapter.md) |
 | 4 | Parallelbetrieb & Cut-Over | offen | Heizung läuft am neuen Adapter | [phase-4-cutover.md](phase-4-cutover.md) |
 
 ## Phase 1 — Offene Punkte für später
