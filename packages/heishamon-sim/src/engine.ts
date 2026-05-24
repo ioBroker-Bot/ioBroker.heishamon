@@ -8,7 +8,8 @@
  * transport / TCP transport / unit tests all drive the same engine.
  */
 
-import { Framer, type FramerEvent } from './framer.js';
+import { Framer, type FramerEvent } from 'heishamon-protocol';
+
 import { handleIncomingFrame, type RouterResult } from './router.js';
 import { createDefaultState, type HeatPumpState } from './state.js';
 

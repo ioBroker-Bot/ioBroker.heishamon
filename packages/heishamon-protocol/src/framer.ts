@@ -4,22 +4,23 @@
  * Serial transports deliver bytes in arbitrary chunks: a single read may
  * contain a partial frame, several frames, or a frame followed by noise.
  * The framer accumulates incoming bytes and emits one event per complete
- * frame (or per byte of unrecoverable noise), so the router can treat its
- * input as a clean stream of "well-formed frames" without worrying about
- * chunk boundaries, checksum errors, or resync.
+ * frame (or per byte of unrecoverable noise), so the consumer can treat
+ * its input as a clean stream of "well-formed frames" without worrying
+ * about chunk boundaries, checksum errors, or resync.
  *
  * The framer is intentionally dumb about frame *contents*: it only knows
  * about header signatures, fixed lengths and the 8-bit checksum. Decoding
- * and routing is the consumer's job (see `router.ts`).
+ * is the consumer's job.
  */
 
-import { FRAME_LENGTHS, identifyFrame, verifyFrame, type FrameType } from 'heishamon-protocol';
+import { verifyFrame } from './crc.js';
+import { FRAME_LENGTHS, identifyFrame, type FrameType } from './frames.js';
 
 /**
  * One event produced by `Framer.push`.
  *
  * `frame` events carry a complete, header-recognised, checksum-validated
- * frame ready for the router. `invalid` events carry the bytes that the
+ * frame ready for the consumer. `invalid` events carry the bytes that the
  * framer had to discard in order to resynchronise the stream — exposing
  * them lets callers log/forward noise instead of silently swallowing it.
  */

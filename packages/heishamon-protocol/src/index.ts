@@ -18,3 +18,5 @@ export {
   identifyFrame,
 } from './frames.js';
 export type { FrameType } from './frames.js';
+export { Framer } from './framer.js';
+export type { FramerEvent } from './framer.js';

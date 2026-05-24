@@ -17,8 +17,6 @@ export { buildExtraResponse, buildMainResponse } from './response-builder.js';
 
 export { handleIncomingFrame, type RouterResult } from './router.js';
 
-export { Framer, type FramerEvent } from './framer.js';
-
 export {
   SimulatorEngine,
   type ProcessResult,

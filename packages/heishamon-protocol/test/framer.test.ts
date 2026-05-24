@@ -10,14 +10,10 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import {
-  FRAME_LENGTHS,
-  buildFrame,
-  computeChecksum,
-  type FrameType,
-} from 'heishamon-protocol';
 
+import { computeChecksum } from '../src/crc.js';
 import { Framer, type FramerEvent } from '../src/framer.js';
+import { FRAME_LENGTHS, buildFrame, type FrameType } from '../src/frames.js';
 
 function concat(...parts: readonly Uint8Array[]): Uint8Array {
   const total = parts.reduce((acc, part) => acc + part.length, 0);
