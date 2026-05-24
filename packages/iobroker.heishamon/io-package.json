@@ -1,0 +1,79 @@
+{
+  "common": {
+    "name": "heishamon",
+    "version": "0.0.1",
+    "news": {
+      "0.0.1": {
+        "en": "Initial adapter skeleton.",
+        "de": "Initiales Adapter-Skeleton."
+      }
+    },
+    "titleLang": {
+      "en": "HeishaMon (direct RS485)",
+      "de": "HeishaMon (direkt per RS485)"
+    },
+    "title": "HeishaMon",
+    "desc": {
+      "en": "Talks the Panasonic Aquarea CN-CNT protocol directly over RS485, without going through a HeishaMon module and MQTT.",
+      "de": "Spricht das Panasonic-Aquarea-CN-CNT-Protokoll direkt per RS485, ohne den Umweg ueber HeishaMon und MQTT."
+    },
+    "authors": ["Tobias Hanss <tobias.hanss@atcetera.de>"],
+    "keywords": ["heishamon", "panasonic", "aquarea", "heatpump", "rs485", "cn-cnt"],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "main": "build/main.js",
+    "icon": "heishamon.png",
+    "type": "climate-control",
+    "mode": "daemon",
+    "loglevel": "info",
+    "messagebox": false,
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "supportedMessages": {
+      "custom": false,
+      "deviceManager": false
+    }
+  },
+  "native": {
+    "device": "/dev/ttyUSB0",
+    "baudRate": 9600,
+    "pollIntervalSec": 5,
+    "extraPollEnabled": true,
+    "optionalPcbPollEnabled": false,
+    "readOnlyMode": false
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": {
+          "en": "Adapter information",
+          "de": "Adapter-Informationen"
+        }
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": {
+          "en": "Heat pump connection",
+          "de": "Verbindung zur Waermepumpe"
+        },
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
+}
