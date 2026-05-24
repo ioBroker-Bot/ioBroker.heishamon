@@ -1,0 +1,79 @@
+{
+  "i18n": true,
+  "type": "panel",
+  "items": {
+    "_serial": {
+      "type": "header",
+      "size": 3,
+      "text": "Serial connection",
+      "newLine": true
+    },
+    "device": {
+      "type": "text",
+      "label": "Serial device path",
+      "help": "e.g. /dev/ttyUSB0 or /dev/ttyAMA0. Must be readable by the ioBroker process.",
+      "newLine": true,
+      "sm": 12,
+      "md": 8
+    },
+    "baudRate": {
+      "type": "number",
+      "label": "Baud rate",
+      "help": "Panasonic Aquarea always uses 9600 8E1. Do not change unless you have a custom transceiver.",
+      "default": 9600,
+      "min": 300,
+      "max": 115200,
+      "sm": 12,
+      "md": 4
+    },
+    "_polling": {
+      "type": "header",
+      "size": 3,
+      "text": "Polling",
+      "newLine": true
+    },
+    "pollIntervalSec": {
+      "type": "number",
+      "label": "Poll interval (seconds)",
+      "help": "How often to query the heat pump. HeishaMon defaults to 5 seconds.",
+      "default": 5,
+      "min": 1,
+      "max": 300,
+      "newLine": true,
+      "sm": 12,
+      "md": 4
+    },
+    "extraPollEnabled": {
+      "type": "checkbox",
+      "label": "Poll the extra data block (K/L series only)",
+      "help": "Adds 6 additional 16-bit energy datapoints. Harmless on older models.",
+      "default": true,
+      "newLine": true,
+      "sm": 12,
+      "md": 6
+    },
+    "optionalPcbPollEnabled": {
+      "type": "checkbox",
+      "label": "Send optional-PCB poll frames (not yet implemented)",
+      "help": "Reserved for future SG-Ready / external thermostat support.",
+      "default": false,
+      "disabled": true,
+      "sm": 12,
+      "md": 6
+    },
+    "_modes": {
+      "type": "header",
+      "size": 3,
+      "text": "Operating mode",
+      "newLine": true
+    },
+    "readOnlyMode": {
+      "type": "checkbox",
+      "label": "Read-only mode (passive listening)",
+      "help": "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).",
+      "default": false,
+      "newLine": true,
+      "sm": 12
+    }
+  }
+}
