@@ -14,3 +14,5 @@ export {
 } from './state.js';
 
 export { buildExtraResponse, buildMainResponse } from './response-builder.js';
+
+export { handleIncomingFrame, type RouterResult } from './router.js';
