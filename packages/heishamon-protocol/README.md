@@ -13,12 +13,17 @@ Dieses Paket wird im Monorepo von zwei Konsumenten genutzt:
 
 Siehe [Phase-1-Plan](../../docs/plan/phase-1-protocol-lib.md). Module:
 
-- `src/crc.ts` — Checksum-Berechnung und -Validierung
-- `src/frames.ts` — Frame-Builder (Phase 1.2, ausstehend)
-- `src/decoder.ts` — tabellengetriebener Decoder (Phase 1.2, ausstehend)
-- `src/encoder.ts` — Set-Command-Encoder (Phase 1.2, ausstehend)
-- `src/datapoints.ts` — kanonische Datenpunkttabelle aus [docs/protocol/datapoints.md](../../docs/protocol/datapoints.md) (Phase 1.2, ausstehend)
-- `src/index.ts` — Public API
+- [src/crc.ts](src/crc.ts) — `computeChecksum`, `verifyFrame` (Zweierkomplement der Bytesumme)
+- [src/datapoints.ts](src/datapoints.ts) — kanonische Datenpunkttabelle (144 main + 7 optional + 6 extra = 157)
+- [src/decoders.ts](src/decoders.ts) — 22 reine Decoder-Primitive + 7 main-Spezialfälle + 7 OPT-Bit-Extraktoren
+- [src/decoder.ts](src/decoder.ts) — `decodeMainFrame`, `decodeExtraFrame`, `decodeOptionalFrame`
+- [src/frames.ts](src/frames.ts) — `FrameType`, `identifyFrame`, `createTemplate`, `buildFrame`
+- [src/encoder.ts](src/encoder.ts) — `encodeSetCommand(name, value)` für 58 von 59 schreibbaren Topics
+- [src/index.ts](src/index.ts) — Public API
+
+## Status
+
+Phase 1 abgeschlossen. **316 Tests grün.** Bekannte Lücken sind im [Phasenplan](../../docs/plan/README.md) dokumentiert.
 
 ## Tests
 
