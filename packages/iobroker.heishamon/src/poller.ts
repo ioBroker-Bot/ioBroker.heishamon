@@ -25,6 +25,14 @@ export interface PollerOptions {
   readonly extraPollEnabled: boolean;
   readonly transport: AdapterTransport;
   readonly log?: Logger;
+  /**
+   * Invoked synchronously right before each poll frame is handed to the
+   * transport. The connection-quality tracker uses this to flush a still-
+   * pending response from the previous tick as a timeout, then book the
+   * new send. Exceptions thrown here propagate and skip the send, which
+   * is the desired behaviour for a misconfigured callback.
+   */
+  readonly onBeforeSend?: (frameType: FrameType) => void;
   /** Override for testing — defaults to global setInterval/clearInterval. */
   readonly timers?: PollerTimers;
 }
@@ -81,6 +89,15 @@ export class Poller {
     this.nextFrameType = this.computeNextFrameType(frameType);
 
     const frame = buildFrame(frameType);
+    if (this.options.onBeforeSend !== undefined) {
+      try {
+        this.options.onBeforeSend(frameType);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.log('error', `onBeforeSend hook failed for ${frameType}: ${message}`);
+        return;
+      }
+    }
     // Promise rejections must not crash the scheduler — log and move on.
     // The next tick will retry, which is the right behaviour for a flaky
     // serial link.

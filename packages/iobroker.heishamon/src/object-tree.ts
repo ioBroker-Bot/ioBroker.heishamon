@@ -48,9 +48,33 @@ export interface ChannelObjectDefinition {
   readonly native: Record<string, never>;
 }
 
+/**
+ * Connection-quality states live under the pre-existing `info` channel
+ * (declared in io-package.json). They do not belong to a `FrameSource`,
+ * so they get a separate, narrower type and a flat `info.<name>` ID.
+ */
+export interface InfoStateObjectDefinition {
+  readonly _id: string;
+  readonly type: 'state';
+  readonly common: {
+    readonly name: string;
+    readonly type: 'number';
+    readonly role: string;
+    readonly read: true;
+    readonly write: false;
+    readonly unit?: string;
+    readonly min?: number;
+    readonly max?: number;
+    readonly def?: number;
+    readonly desc?: string;
+  };
+  readonly native: Record<string, never>;
+}
+
 export interface ObjectTree {
   readonly channels: readonly ChannelObjectDefinition[];
   readonly states: readonly StateObjectDefinition[];
+  readonly infoStates: readonly InfoStateObjectDefinition[];
 }
 
 const CHANNEL_DEFINITIONS: readonly ChannelObjectDefinition[] = [
@@ -70,6 +94,77 @@ const CHANNEL_DEFINITIONS: readonly ChannelObjectDefinition[] = [
     _id: 'optional',
     type: 'channel',
     common: { name: 'Optional PCB frame (OPT0–OPT6)' },
+    native: {},
+  },
+];
+
+const INFO_STATE_DEFINITIONS: readonly InfoStateObjectDefinition[] = [
+  {
+    _id: 'info.framesSent',
+    type: 'state',
+    common: {
+      name: 'Poll frames sent since adapter start',
+      type: 'number',
+      role: 'value',
+      read: true,
+      write: false,
+      def: 0,
+    },
+    native: {},
+  },
+  {
+    _id: 'info.framesReceived',
+    type: 'state',
+    common: {
+      name: 'Frames received from heat pump (any CRC status)',
+      type: 'number',
+      role: 'value',
+      read: true,
+      write: false,
+      def: 0,
+    },
+    native: {},
+  },
+  {
+    _id: 'info.framesCrcOk',
+    type: 'state',
+    common: {
+      name: 'Frames received with valid CRC',
+      type: 'number',
+      role: 'value',
+      read: true,
+      write: false,
+      def: 0,
+    },
+    native: {},
+  },
+  {
+    _id: 'info.framesCrcFail',
+    type: 'state',
+    common: {
+      name: 'Frames received with invalid CRC',
+      type: 'number',
+      role: 'value',
+      read: true,
+      write: false,
+      def: 0,
+    },
+    native: {},
+  },
+  {
+    _id: 'info.connectionQuality',
+    type: 'state',
+    common: {
+      name: 'Connection quality over the last 20 ping-pongs',
+      type: 'number',
+      role: 'value',
+      read: true,
+      write: false,
+      unit: '%',
+      min: 0,
+      max: 100,
+      def: 0,
+    },
     native: {},
   },
 ];
@@ -225,13 +320,15 @@ function buildStateDefinition(datapoint: DataPoint): StateObjectDefinition {
 }
 
 /**
- * Build the full object tree: all 157 datapoints as state objects, plus the
- * three channels they live in.
+ * Build the full object tree: all 157 datapoints as state objects, the
+ * three frame channels they live in, plus the connection-quality states
+ * under the (already-declared) `info` channel.
  */
 export function buildObjectTree(): ObjectTree {
   const states = ALL_DATAPOINTS.map(buildStateDefinition);
   return {
     channels: CHANNEL_DEFINITIONS,
     states,
+    infoStates: INFO_STATE_DEFINITIONS,
   };
 }

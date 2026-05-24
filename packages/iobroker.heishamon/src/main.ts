@@ -14,9 +14,11 @@ import * as utils from '@iobroker/adapter-core';
 import {
   encodeSetCommand,
   findByName,
+  type FrameType,
   type FramerEvent,
 } from 'heishamon-protocol';
 
+import { ConnectionStats, type ConnectionStatsSnapshot } from './connection-stats.js';
 import { buildObjectTree } from './object-tree.js';
 import { Poller } from './poller.js';
 import { StateApplier } from './state-applier.js';
@@ -26,6 +28,13 @@ import {
   type LogLevel,
   type Logger,
 } from './transport.js';
+
+/**
+ * Minimum gap between two consecutive flushes of the connection-stats
+ * info-states. Updates that arrive in less time are coalesced into a
+ * single trailing-edge write so we don't spam the ioBroker jsonl store.
+ */
+const STATS_FLUSH_THROTTLE_MS = 1000;
 
 interface NativeConfig {
   readonly device: string;
@@ -50,6 +59,14 @@ class HeishamonAdapter extends AdapterBase {
   private poller: Poller | null = null;
   private applier: StateApplier | null = null;
   private nativeConfig: NativeConfig | null = null;
+  private readonly connectionStats: ConnectionStats = new ConnectionStats();
+  private lastStatsFlushAt = 0;
+  private statsFlushTimer: NodeJS.Timeout | null = null;
+  private lastWrittenSnapshot: ConnectionStatsSnapshot | null = null;
+  // The framer drops one byte per failed-checksum resync, so a single
+  // garbled 203-byte response yields many `invalid/checksum` events. We
+  // collapse runs of them into a single CRC-fail frame for stats.
+  private invalidRunActive = false;
 
   constructor(options: Partial<utils.AdapterOptions> = {}) {
     super({ ...options, name: 'heishamon' });
@@ -107,6 +124,13 @@ class HeishamonAdapter extends AdapterBase {
         extraPollEnabled: cfg.extraPollEnabled,
         transport,
         log: logger,
+        onBeforeSend: () => {
+          // Any still-pending response from the previous tick missed its
+          // window and counts as a timeout in the quality buffer.
+          this.connectionStats.markPendingAsTimeout();
+          this.connectionStats.recordSent();
+          this.scheduleStatsFlush();
+        },
       });
       this.poller.start();
     } else {
@@ -136,7 +160,7 @@ class HeishamonAdapter extends AdapterBase {
   }
 
   private async ensureObjectTree(): Promise<void> {
-    const { channels, states } = buildObjectTree();
+    const { channels, states, infoStates } = buildObjectTree();
     for (const channel of channels) {
       await this.setObjectNotExistsAsync(
         channel._id,
@@ -147,6 +171,12 @@ class HeishamonAdapter extends AdapterBase {
       await this.setObjectNotExistsAsync(
         state._id,
         state as unknown as ioBroker.SettableObject,
+      );
+    }
+    for (const infoState of infoStates) {
+      await this.setObjectNotExistsAsync(
+        infoState._id,
+        infoState as unknown as ioBroker.SettableObject,
       );
     }
   }
@@ -163,7 +193,20 @@ class HeishamonAdapter extends AdapterBase {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join(' ');
       this.log.debug(`framer: invalid (${event.reason}, bytes=${hex})`);
+      // A failed-checksum candidate counts as one CRC-fail frame, but the
+      // framer can emit many `invalid` events in a row while resynchronising
+      // after a bad frame. Collapse the run so we only book one frame.
+      if (event.reason === 'checksum' && !this.invalidRunActive) {
+        this.invalidRunActive = true;
+        this.connectionStats.recordReceived(false);
+        this.scheduleStatsFlush();
+      }
       return;
+    }
+    this.invalidRunActive = false;
+    if (this.isResponseFrame(event.frameType)) {
+      this.connectionStats.recordReceived(true);
+      this.scheduleStatsFlush();
     }
     if (this.applier === null) {
       // Frame arrived before onReady finished wiring the applier — drop it.
@@ -185,6 +228,66 @@ class HeishamonAdapter extends AdapterBase {
         // is either readOnlyMode (a real HeishaMon is polling) or noise.
         this.log.debug(`framer: master->WP frame ${event.frameType} ignored`);
         return;
+    }
+  }
+
+  private isResponseFrame(frameType: FrameType): boolean {
+    return frameType === 'mainResponse' || frameType === 'extraResponse';
+  }
+
+  /**
+   * Throttled flush of the connection-stats snapshot to ioBroker. Writes
+   * immediately when the last flush is older than `STATS_FLUSH_THROTTLE_MS`,
+   * otherwise schedules a single trailing-edge write.
+   */
+  private scheduleStatsFlush(): void {
+    const now = Date.now();
+    const sinceLast = now - this.lastStatsFlushAt;
+    if (sinceLast >= STATS_FLUSH_THROTTLE_MS) {
+      void this.flushStatsNow(now);
+      return;
+    }
+    if (this.statsFlushTimer !== null) {
+      return;
+    }
+    const delay = Math.max(0, STATS_FLUSH_THROTTLE_MS - sinceLast);
+    this.statsFlushTimer = setTimeout(() => {
+      this.statsFlushTimer = null;
+      void this.flushStatsNow(Date.now());
+    }, delay);
+  }
+
+  private async flushStatsNow(at: number): Promise<void> {
+    this.lastStatsFlushAt = at;
+    const snapshot = this.connectionStats.snapshot();
+    const previous = this.lastWrittenSnapshot;
+    this.lastWrittenSnapshot = snapshot;
+
+    const writes: Array<Promise<void>> = [];
+    if (previous === null || previous.framesSent !== snapshot.framesSent) {
+      writes.push(this.writeInfoState('info.framesSent', snapshot.framesSent));
+    }
+    if (previous === null || previous.framesReceived !== snapshot.framesReceived) {
+      writes.push(this.writeInfoState('info.framesReceived', snapshot.framesReceived));
+    }
+    if (previous === null || previous.framesCrcOk !== snapshot.framesCrcOk) {
+      writes.push(this.writeInfoState('info.framesCrcOk', snapshot.framesCrcOk));
+    }
+    if (previous === null || previous.framesCrcFail !== snapshot.framesCrcFail) {
+      writes.push(this.writeInfoState('info.framesCrcFail', snapshot.framesCrcFail));
+    }
+    if (previous === null || previous.connectionQuality !== snapshot.connectionQuality) {
+      writes.push(this.writeInfoState('info.connectionQuality', snapshot.connectionQuality));
+    }
+    await Promise.allSettled(writes);
+  }
+
+  private async writeInfoState(id: string, value: number): Promise<void> {
+    try {
+      await this.setStateAsync(id, { val: value, ack: true });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.log.warn(`failed to write ${id}: ${message}`);
     }
   }
 
@@ -262,6 +365,10 @@ class HeishamonAdapter extends AdapterBase {
     try {
       this.poller?.stop();
       this.poller = null;
+      if (this.statsFlushTimer !== null) {
+        clearTimeout(this.statsFlushTimer);
+        this.statsFlushTimer = null;
+      }
       if (this.transport !== null) {
         await this.transport.close();
         this.transport = null;

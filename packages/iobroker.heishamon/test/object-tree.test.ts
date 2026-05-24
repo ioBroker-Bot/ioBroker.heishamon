@@ -114,6 +114,51 @@ describe('buildObjectTree', () => {
   });
 });
 
+describe('buildObjectTree — info states (connection quality)', () => {
+  const infoById = new Map(tree.infoStates.map((s) => [s._id, s]));
+
+  it('exposes the five expected info states', () => {
+    expect(tree.infoStates.length).toBe(5);
+    expect(infoById.has('info.framesSent')).toBe(true);
+    expect(infoById.has('info.framesReceived')).toBe(true);
+    expect(infoById.has('info.framesCrcOk')).toBe(true);
+    expect(infoById.has('info.framesCrcFail')).toBe(true);
+    expect(infoById.has('info.connectionQuality')).toBe(true);
+  });
+
+  it('marks every info counter as read-only number with role "value"', () => {
+    const counters: ReadonlyArray<string> = [
+      'info.framesSent',
+      'info.framesReceived',
+      'info.framesCrcOk',
+      'info.framesCrcFail',
+    ];
+    for (const id of counters) {
+      const state = infoById.get(id);
+      expect(state, id).toBeDefined();
+      expect(state!.common.type).toBe('number');
+      expect(state!.common.role).toBe('value');
+      expect(state!.common.read).toBe(true);
+      expect(state!.common.write).toBe(false);
+    }
+  });
+
+  it('declares info.connectionQuality as a 0-100 % value', () => {
+    const state = infoById.get('info.connectionQuality');
+    expect(state).toBeDefined();
+    expect(state!.common.unit).toBe('%');
+    expect(state!.common.min).toBe(0);
+    expect(state!.common.max).toBe(100);
+    expect(state!.common.role).toBe('value');
+    expect(state!.common.read).toBe(true);
+    expect(state!.common.write).toBe(false);
+  });
+
+  it('does not redeclare info.connection (kept in io-package.json)', () => {
+    expect(infoById.has('info.connection')).toBe(false);
+  });
+});
+
 describe('stateId', () => {
   it('joins frame source and datapoint name with a dot', () => {
     expect(stateId('main', 'Outside_Temp')).toBe('main.Outside_Temp');

@@ -196,6 +196,62 @@ describe('Poller', () => {
     expect(harness.hasActiveTimer()).toBe(false);
   });
 
+  it('fires onBeforeSend once per tick, before transport.send', async () => {
+    const harness = createFakeTimerHarness();
+    const order: string[] = [];
+
+    const recordingTransport: AdapterTransport = {
+      open: async () => {},
+      send: async (frame: Uint8Array) => {
+        order.push('send');
+        transport.sent.push(frame);
+      },
+      close: async () => {},
+    };
+
+    const poller = new Poller({
+      pollIntervalMs: 5000,
+      extraPollEnabled: false,
+      transport: recordingTransport,
+      onBeforeSend: (frameType) => {
+        order.push(`before:${frameType}`);
+      },
+      timers: harness.timers,
+    });
+
+    poller.start();
+    harness.tick();
+    await Promise.resolve();
+
+    expect(order).toEqual(['before:mainPoll', 'send', 'before:mainPoll', 'send']);
+
+    poller.stop();
+  });
+
+  it('skips the send when onBeforeSend throws', async () => {
+    const harness = createFakeTimerHarness();
+    const log = vi.fn();
+
+    const poller = new Poller({
+      pollIntervalMs: 5000,
+      extraPollEnabled: false,
+      transport,
+      log,
+      onBeforeSend: () => {
+        throw new Error('hook-boom');
+      },
+      timers: harness.timers,
+    });
+
+    poller.start();
+    await Promise.resolve();
+
+    expect(transport.sent.length).toBe(0);
+    expect(log).toHaveBeenCalledWith('error', expect.stringContaining('hook-boom'));
+
+    poller.stop();
+  });
+
   it('start() is idempotent — does not schedule a second timer', async () => {
     const harness = createFakeTimerHarness();
     const poller = new Poller({
