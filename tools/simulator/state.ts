@@ -17,7 +17,7 @@ import {
   EXTRA_DATAPOINTS,
   MAIN_DATAPOINTS,
   OPTIONAL_DATAPOINTS,
-} from '../protocol/index.js';
+} from '../../src/protocol/index.js';
 
 /**
  * Mutable map from datapoint topic suffix to its current value. String

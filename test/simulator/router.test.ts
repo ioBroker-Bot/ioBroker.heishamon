@@ -21,9 +21,9 @@ import {
   identifyFrame,
 } from '../../src/protocol/index.js';
 
-import { handleIncomingFrame } from '../../src/simulator/router.js';
-import { buildExtraResponse, buildMainResponse } from '../../src/simulator/response-builder.js';
-import { createDefaultState } from '../../src/simulator/state.js';
+import { handleIncomingFrame } from '../../tools/simulator/router.js';
+import { buildExtraResponse, buildMainResponse } from '../../tools/simulator/response-builder.js';
+import { createDefaultState } from '../../tools/simulator/state.js';
 
 describe('handleIncomingFrame', () => {
   describe('mainPoll', () => {

@@ -1,0 +1,17 @@
+{
+  "Serial connection": "Последовательное соединение",
+  "Serial device path": "Путь к последовательному устройству",
+  "e.g. /dev/ttyUSB0 or /dev/ttyAMA0. Must be readable by the ioBroker process.": "напр. /dev/ttyUSB0 или /dev/ttyAMA0. Должно быть доступно для чтения процессу ioBroker.",
+  "Baud rate": "Скорость в бодах",
+  "Panasonic Aquarea always uses 9600 8E1. Do not change unless you have a custom transceiver.": "Panasonic Aquarea всегда использует 9600 8E1. Не меняйте, если не используется специальный приёмопередатчик.",
+  "Polling": "Опрос",
+  "Poll interval (seconds)": "Интервал опроса (секунды)",
+  "How often to query the heat pump. HeishaMon defaults to 5 seconds.": "Как часто опрашивать тепловой насос. По умолчанию HeishaMon использует 5 секунд.",
+  "Poll the extra data block (K/L series only)": "Опрашивать дополнительный блок данных (только серии K/L)",
+  "Adds 6 additional 16-bit energy datapoints. Harmless on older models.": "Добавляет 6 дополнительных 16-битных точек данных по энергии. Безвредно для старых моделей.",
+  "Send optional-PCB poll frames (not yet implemented)": "Отправлять кадры опроса опциональной PCB (ещё не реализовано)",
+  "Reserved for future SG-Ready / external thermostat support.": "Зарезервировано для будущей поддержки SG-Ready / внешнего термостата.",
+  "Operating mode": "Режим работы",
+  "Read-only mode (passive listening)": "Режим только чтения (пассивное прослушивание)",
+  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "Не отправляет опросы и команды. Декодирует и сохраняет кадры, отправляемые другим мастером на шине (например, HeishaMon при параллельной работе фазы 4)."
+}

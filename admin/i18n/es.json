@@ -1,0 +1,17 @@
+{
+  "Serial connection": "Conexión serie",
+  "Serial device path": "Ruta del dispositivo serie",
+  "e.g. /dev/ttyUSB0 or /dev/ttyAMA0. Must be readable by the ioBroker process.": "p. ej. /dev/ttyUSB0 o /dev/ttyAMA0. Debe ser legible por el proceso de ioBroker.",
+  "Baud rate": "Velocidad en baudios",
+  "Panasonic Aquarea always uses 9600 8E1. Do not change unless you have a custom transceiver.": "Panasonic Aquarea siempre usa 9600 8E1. No cambie a menos que use un transceptor personalizado.",
+  "Polling": "Sondeo",
+  "Poll interval (seconds)": "Intervalo de sondeo (segundos)",
+  "How often to query the heat pump. HeishaMon defaults to 5 seconds.": "Con qué frecuencia consultar la bomba de calor. El valor predeterminado de HeishaMon es 5 segundos.",
+  "Poll the extra data block (K/L series only)": "Sondear el bloque de datos adicional (solo series K/L)",
+  "Adds 6 additional 16-bit energy datapoints. Harmless on older models.": "Añade 6 puntos de datos energéticos adicionales de 16 bits. Inofensivo en modelos antiguos.",
+  "Send optional-PCB poll frames (not yet implemented)": "Enviar tramas de sondeo de PCB opcional (aún no implementado)",
+  "Reserved for future SG-Ready / external thermostat support.": "Reservado para soporte futuro de SG-Ready / termostato externo.",
+  "Operating mode": "Modo de funcionamiento",
+  "Read-only mode (passive listening)": "Modo solo lectura (escucha pasiva)",
+  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "No envía sondeos ni comandos. Decodifica y guarda tramas enviadas por otro maestro en el bus (por ejemplo HeishaMon en operación paralela de Fase 4)."
+}

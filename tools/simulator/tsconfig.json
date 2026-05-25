@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "outDir": "../../build-tools",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["**/*.ts", "../../src/protocol/**/*.ts", "../../test/simulator/**/*.ts"],
+  "exclude": ["node_modules"]
+}

@@ -13,7 +13,7 @@ import {
 import {
   TOTAL_DATAPOINT_COUNT,
   createDefaultState,
-} from '../../src/simulator/state.js';
+} from '../../tools/simulator/state.js';
 
 describe('createDefaultState', () => {
   it('contains an entry for every datapoint (157 in total)', () => {

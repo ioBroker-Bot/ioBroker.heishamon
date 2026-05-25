@@ -8,7 +8,7 @@
  * transport / TCP transport / unit tests all drive the same engine.
  */
 
-import { Framer, type FramerEvent } from '../protocol/index.js';
+import { Framer, type FramerEvent } from '../../src/protocol/index.js';
 
 import { handleIncomingFrame, type RouterResult } from './router.js';
 import { createDefaultState, type HeatPumpState } from './state.js';

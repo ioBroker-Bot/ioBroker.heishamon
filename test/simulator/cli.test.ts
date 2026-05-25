@@ -15,7 +15,7 @@ import {
   formatStateValue,
   parseArgs,
   parseCommand,
-} from '../../src/simulator/cli.js';
+} from '../../tools/simulator/cli.js';
 
 describe('parseArgs', () => {
   it('accepts only --device and applies defaults', () => {

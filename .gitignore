@@ -40,6 +40,9 @@ tmp/
 # Claude Code local data
 .claude/
 
+# iobroker-release commit info
+.commitinfo
+
 # HeishaMon-Upstream-Snapshot — siehe README ("Lokales Setup").
 # Nicht im Repo, weil HeishaMon keine explizite Lizenz hat (vgl.
 # vendor/heishamon-upstream/LICENSE-NOTE.md). Der Snapshot wird lokal

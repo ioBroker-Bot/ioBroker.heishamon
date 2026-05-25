@@ -4,33 +4,59 @@
     "version": "0.0.1",
     "news": {
       "0.0.1": {
-        "en": "Initial adapter skeleton.",
-        "de": "Initiales Adapter-Skeleton."
+        "en": "Initial adapter release.",
+        "de": "Initiales Adapter-Release.",
+        "ru": "Первоначальный выпуск адаптера.",
+        "pt": "Versão inicial do adaptador.",
+        "nl": "Eerste release van de adapter.",
+        "fr": "Première version de l'adaptateur.",
+        "it": "Prima versione dell'adattatore.",
+        "es": "Primera versión del adaptador.",
+        "pl": "Pierwsze wydanie adaptera.",
+        "uk": "Початковий випуск адаптера.",
+        "zh-cn": "适配器初始版本。"
       }
     },
     "titleLang": {
       "en": "HeishaMon (direct serial / RS232)",
-      "de": "HeishaMon (direkt seriell / RS232)"
+      "de": "HeishaMon (direkt seriell / RS232)",
+      "ru": "HeishaMon (прямой serial / RS232)",
+      "pt": "HeishaMon (serial direta / RS232)",
+      "nl": "HeishaMon (directe seriële / RS232)",
+      "fr": "HeishaMon (série directe / RS232)",
+      "it": "HeishaMon (seriale diretto / RS232)",
+      "es": "HeishaMon (serial directo / RS232)",
+      "pl": "HeishaMon (bezpośrednio szeregowo / RS232)",
+      "uk": "HeishaMon (прямий serial / RS232)",
+      "zh-cn": "HeishaMon (直接串行 / RS232)"
     },
-    "title": "HeishaMon",
     "desc": {
       "en": "Talks the Panasonic Aquarea CN-CNT protocol directly over a serial line (RS232 levels at the heat pump's CN-CNT port; an optional RS232/RS485 converter can be used for long cable runs), without going through a HeishaMon module and MQTT.",
-      "de": "Spricht das Panasonic-Aquarea-CN-CNT-Protokoll direkt ueber eine serielle Leitung (RS232-Pegel am CN-CNT-Port der Waermepumpe; fuer lange Kabelstrecken kann optional ein RS232/RS485-Konverter eingesetzt werden), ohne den Umweg ueber HeishaMon und MQTT."
+      "de": "Spricht das Panasonic-Aquarea-CN-CNT-Protokoll direkt ueber eine serielle Leitung (RS232-Pegel am CN-CNT-Port der Waermepumpe; fuer lange Kabelstrecken kann optional ein RS232/RS485-Konverter eingesetzt werden), ohne den Umweg ueber HeishaMon und MQTT.",
+      "ru": "Напрямую общается с тепловым насосом Panasonic Aquarea по протоколу CN-CNT через последовательный порт (RS232 на разъёме CN-CNT; для длинных кабелей можно использовать переходник RS232/RS485) без HeishaMon и MQTT.",
+      "pt": "Comunica diretamente com a bomba de calor Panasonic Aquarea através do protocolo CN-CNT por linha serial (níveis RS232 no conector CN-CNT; opcional conversor RS232/RS485 para cabos longos), sem passar por HeishaMon e MQTT.",
+      "nl": "Communiceert direct met de Panasonic Aquarea warmtepomp via het CN-CNT protocol over een seriële verbinding (RS232 op de CN-CNT poort; optioneel een RS232/RS485 converter voor lange kabels), zonder HeishaMon en MQTT.",
+      "fr": "Communique directement avec la pompe à chaleur Panasonic Aquarea via le protocole CN-CNT en série (niveaux RS232 sur le port CN-CNT ; convertisseur RS232/RS485 optionnel pour les longs câbles), sans passer par HeishaMon ni MQTT.",
+      "it": "Comunica direttamente con la pompa di calore Panasonic Aquarea tramite il protocollo CN-CNT su linea seriale (livelli RS232 sulla porta CN-CNT; convertitore RS232/RS485 opzionale per cavi lunghi), senza passare da HeishaMon e MQTT.",
+      "es": "Se comunica directamente con la bomba de calor Panasonic Aquarea mediante el protocolo CN-CNT por línea serie (niveles RS232 en el puerto CN-CNT; opcional convertidor RS232/RS485 para cables largos), sin pasar por HeishaMon ni MQTT.",
+      "pl": "Komunikuje się bezpośrednio z pompą ciepła Panasonic Aquarea protokołem CN-CNT przez port szeregowy (poziomy RS232 na porcie CN-CNT; opcjonalnie konwerter RS232/RS485 dla długich kabli), bez HeishaMon i MQTT.",
+      "uk": "Напряму спілкується з тепловим насосом Panasonic Aquarea за протоколом CN-CNT через послідовний порт (RS232 на роз'ємі CN-CNT; за потреби конвертер RS232/RS485 для довгих кабелів) без HeishaMon та MQTT.",
+      "zh-cn": "通过串口直接与 Panasonic Aquarea 热泵的 CN-CNT 协议通讯（CN-CNT 接口为 RS232 电平，长线缆可选配 RS232/RS485 转换器），无需 HeishaMon 与 MQTT。"
     },
     "authors": ["Tobias Hanss <tobias.hanss@atcetera.de>"],
     "keywords": ["heishamon", "panasonic", "aquarea", "heatpump", "rs232", "rs485", "cn-cnt", "serial"],
-    "license": "MIT",
     "licenseInformation": {
       "license": "MIT",
       "type": "free"
     },
     "platform": "Javascript/Node.js",
-    "main": "build/main.js",
     "icon": "heishamon.png",
     "extIcon": "https://raw.githubusercontent.com/TobiasHanss/ioBroker.heishamon/main/admin/heishamon.png",
     "readme": "https://github.com/TobiasHanss/ioBroker.heishamon/blob/main/README.md",
     "type": "climate-control",
     "mode": "daemon",
+    "tier": 3,
+    "noGit": true,
     "loglevel": "info",
     "messagebox": false,
     "compact": true,
@@ -44,7 +70,10 @@
       "deviceManager": false
     },
     "dependencies": [
-      { "js-controller": ">=5.0.19" }
+      { "js-controller": ">=6.0.11" }
+    ],
+    "globalDependencies": [
+      { "admin": ">=7.6.17" }
     ]
   },
   "native": {

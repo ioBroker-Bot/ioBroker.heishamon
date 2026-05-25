@@ -18,7 +18,7 @@ import {
   type DataPoint,
   type DecoderKind,
   type FrameType,
-} from '../protocol/index.js';
+} from '../../src/protocol/index.js';
 
 import { buildExtraResponse, buildMainResponse } from './response-builder.js';
 import { type HeatPumpState } from './state.js';

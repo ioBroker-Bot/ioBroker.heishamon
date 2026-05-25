@@ -16,8 +16,8 @@ import {
   type DataPoint,
 } from '../../src/protocol/index.js';
 
-import { buildExtraResponse, buildMainResponse } from '../../src/simulator/response-builder.js';
-import { createDefaultState, type HeatPumpState } from '../../src/simulator/state.js';
+import { buildExtraResponse, buildMainResponse } from '../../tools/simulator/response-builder.js';
+import { createDefaultState, type HeatPumpState } from '../../tools/simulator/state.js';
 
 function withOverrides(overrides: HeatPumpState): HeatPumpState {
   return { ...createDefaultState(), ...overrides };

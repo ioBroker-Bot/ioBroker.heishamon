@@ -15,7 +15,7 @@
 import * as readline from 'node:readline';
 import process from 'node:process';
 
-import { findByName } from '../protocol/index.js';
+import { findByName } from '../../src/protocol/index.js';
 
 import { SimulatorEngine, type SimulatorEvent } from './engine.js';
 import { SerialTransport, type TransportLogLevel } from './transport-serial.js';

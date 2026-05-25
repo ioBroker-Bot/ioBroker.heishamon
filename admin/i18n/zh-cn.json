@@ -1,0 +1,17 @@
+{
+  "Serial connection": "串行连接",
+  "Serial device path": "串行设备路径",
+  "e.g. /dev/ttyUSB0 or /dev/ttyAMA0. Must be readable by the ioBroker process.": "例如 /dev/ttyUSB0 或 /dev/ttyAMA0。必须可由 ioBroker 进程读取。",
+  "Baud rate": "波特率",
+  "Panasonic Aquarea always uses 9600 8E1. Do not change unless you have a custom transceiver.": "Panasonic Aquarea 始终使用 9600 8E1。除非使用自定义收发器，否则请勿修改。",
+  "Polling": "轮询",
+  "Poll interval (seconds)": "轮询间隔（秒）",
+  "How often to query the heat pump. HeishaMon defaults to 5 seconds.": "查询热泵的频率。HeishaMon 默认为 5 秒。",
+  "Poll the extra data block (K/L series only)": "轮询附加数据块（仅 K/L 系列）",
+  "Adds 6 additional 16-bit energy datapoints. Harmless on older models.": "新增 6 个额外的 16 位能量数据点。对较旧机型无影响。",
+  "Send optional-PCB poll frames (not yet implemented)": "发送可选 PCB 轮询帧（尚未实现）",
+  "Reserved for future SG-Ready / external thermostat support.": "为将来的 SG-Ready / 外部恒温器支持预留。",
+  "Operating mode": "运行模式",
+  "Read-only mode (passive listening)": "只读模式（被动监听）",
+  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "不发送任何轮询或设置命令。解码并存储总线上其他主设备发送的帧（例如 Phase-4 并行运行期间的 HeishaMon）。"
+}

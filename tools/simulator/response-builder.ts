@@ -27,7 +27,7 @@ import {
   MAIN_DATAPOINTS,
   type DataPoint,
   type DecoderKind,
-} from '../protocol/index.js';
+} from '../../src/protocol/index.js';
 
 import type { HeatPumpState } from './state.js';
 

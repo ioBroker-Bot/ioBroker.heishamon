@@ -20,9 +20,9 @@ import {
   encodeSetCommand,
 } from '../../src/protocol/index.js';
 
-import { SimulatorEngine } from '../../src/simulator/engine.js';
-import { buildMainResponse } from '../../src/simulator/response-builder.js';
-import { createDefaultState } from '../../src/simulator/state.js';
+import { SimulatorEngine } from '../../tools/simulator/engine.js';
+import { buildMainResponse } from '../../tools/simulator/response-builder.js';
+import { createDefaultState } from '../../tools/simulator/state.js';
 
 function concat(...parts: readonly Uint8Array[]): Uint8Array {
   const total = parts.reduce((acc, part) => acc + part.length, 0);
