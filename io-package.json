@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "heishamon",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "news": {
+      "0.0.2": {
+        "en": "Engines requirement relaxed to node >= 20 (was 22) so the adapter installs on current ioBroker LTS hosts.",
+        "de": "Engine-Anforderung auf Node >= 20 (vorher 22) gelockert, damit der Adapter auf aktuellen ioBroker-LTS-Hosts installiert.",
+        "ru": "Требование к Node ослаблено до >= 20 (было 22) для установки на актуальных хостах ioBroker LTS.",
+        "pt": "Requisito de motor reduzido para Node >= 20 (antes 22) para instalação em hosts ioBroker LTS atuais.",
+        "nl": "Engine-vereiste verlaagd naar Node >= 20 (was 22) voor installatie op huidige ioBroker LTS-hosts.",
+        "fr": "Exigence de moteur abaissée à Node >= 20 (au lieu de 22) pour l'installation sur les hôtes ioBroker LTS actuels.",
+        "it": "Requisito motore abbassato a Node >= 20 (era 22) per l'installazione su host ioBroker LTS attuali.",
+        "es": "Requisito de motor reducido a Node >= 20 (antes 22) para instalación en hosts ioBroker LTS actuales.",
+        "pl": "Wymaganie silnika obniżone do Node >= 20 (było 22) dla instalacji na obecnych hostach ioBroker LTS.",
+        "uk": "Вимога до движка знижена до Node >= 20 (було 22) для встановлення на поточних хостах ioBroker LTS.",
+        "zh-cn": "引擎要求降至 Node >= 20（之前为 22），以便在当前 ioBroker LTS 主机上安装。"
+      },
       "0.0.1": {
         "en": "Initial adapter release.",
         "de": "Initiales Adapter-Release.",

@@ -54,6 +54,9 @@ Protocol decoding builds on the work of the [HeishaMon community](https://github
     ### **WORK IN PROGRESS**
 -->
 
+### 0.0.2 (2026-05-25)
+* (Tobias Hanss) Lower Node.js engine requirement to >= 20 (was 22) so the adapter installs on current ioBroker LTS hosts
+
 ### 0.0.1 (2026-05-25)
 * (Tobias Hanss) Initial adapter release
 
