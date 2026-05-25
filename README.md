@@ -1,6 +1,7 @@
 # ioBroker.heishamon
 
-ioBroker adapter that talks the **Panasonic Aquarea CN-CNT** protocol directly over a serial line, without any HeishaMon module or MQTT broker in between. The heat pump's CN-CNT connector uses **RS232 voltage levels**; an optional RS232/RS485 converter can be added for long cable runs because the protocol is half-duplex. Protocol decoding is based on insights from the [HeishaMon project](https://github.com/Egyras/HeishaMon).
+ioBroker adapter that talks the **Panasonic Aquarea CN-CNT** protocol directly over a serial line, without any HeishaMon module or MQTT broker in between. The heat pump's CN-CNT connector uses **5V TTL UART logic levels**. A suitable level shifter is required when connecting it to a 3.3V UART, such as the Raspberry Pi GPIO UART. For long cable runs, an optional TTL/RS485 converter can be added because the protocol is half-duplex. Protocol decoding is based on insights from the [HeishaMon project](https://github.com/Egyras/HeishaMon).
+
 
 > **Status:** Early release. Protocol library, simulator and adapter logic are complete in-process; field testing against a real heat pump is the next step.
 
@@ -31,9 +32,10 @@ For detailed wiring and OS-level instructions (serial permissions, RS232 wiring,
 
 ## Hardware
 
-- ioBroker host with a serial port (Raspberry Pi UART, USB-RS232 adapter, or USB-RS485 adapter with a converter).
-- RS232 level-shifter (e.g. MAX3232) is required when connecting the Pi UART directly to the heat pump.
-- For long cable runs, place an RS232/RS485 converter near the host and use shielded twisted pair to the heat pump.
+- ioBroker host with a serial interface, such as a Raspberry Pi UART, USB-TTL UART adapter, or USB-RS485 adapter with a suitable converter.
+- Logic-level shifter is required when connecting a 3.3V UART, such as the Raspberry Pi UART, directly to the heat pump's 5V TTL UART pins.
+- Use a 5V-compatible USB-TTL UART adapter if connecting via USB directly.
+- For long cable runs, place a TTL/RS485 converter near the heat pump or host and use shielded twisted pair cable.
 
 ## Documentation
 
