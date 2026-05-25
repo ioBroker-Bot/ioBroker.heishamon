@@ -1,12 +1,12 @@
 # Projektziel
 
-Ein ioBroker-Adapter, der **direkt per RS485** mit einer Panasonic Aquarea Wärmepumpe spricht — ohne den Umweg über MQTT/HeishaMon-Modul.
+Ein ioBroker-Adapter, der **direkt seriell** mit einer Panasonic Aquarea Wärmepumpe spricht — ohne den Umweg über MQTT/HeishaMon-Modul. Die WP-Seite arbeitet mit **RS232-Pegel** am CN-CNT-Port. Für längere Kabelstrecken kann optional ein RS232↔RS485-Konverter eingesetzt werden (das Protokoll ist halbduplex, daher kompatibel).
 
 ## Hardware-Setup
 
 - ioBroker auf Raspberry Pi 4
-- RS485-Transceiver an GPIO/UART
-- DE-Pin wird vom Kernel-UART-Treiber gemanagt (eigener Treiber existiert bereits)
+- RS232-Pegelwandler (z.B. MAX3232) am UART **oder** USB-RS232-Adapter
+- Optional: RS232↔RS485-Konverter für lange Distanzen — dann wird der DE-Pin vom Kernel-UART-Treiber gemanagt (eigener Treiber existiert bereits)
 
 ## Scope
 

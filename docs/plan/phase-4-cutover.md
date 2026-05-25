@@ -13,7 +13,7 @@ Phase 3 abgeschlossen. Adapter ist gegen den Simulator vollständig validiert.
 ### Setup
 - Auf dem Heizungs-Pi: Adapter installieren.
 - Adapter **im Read-Only-Modus** starten.
-- Variante A (empfohlen): zweiter RS485-Transceiver am Pi, parallel auf den WP-Bus geklemmt — nur RX aktiv. Adapter lauscht passiv, was HeishaMon abfragt und was die WP antwortet.
+- Variante A (empfohlen): zweiter serieller Empfänger am Pi (RS232-Pegel an der WP; bei RS232↔RS485-Konverter entsprechend ein RS485-Receiver), parallel auf die WP-Leitung geklemmt — nur RX aktiv. Adapter lauscht passiv, was HeishaMon abfragt und was die WP antwortet.
 - HeishaMon läuft weiter und versorgt die Automatisierung wie gewohnt.
 
 ### Validierung

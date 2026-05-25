@@ -7,12 +7,12 @@ Getestet gegen **ioBroker 7.0.7** auf Linux (systemd-Installation unter `/opt/io
 ## Vorbedingungen
 
 - Node.js ≥ 18.18 (kommt mit ioBroker-Installer).
-- ioBroker läuft als User `iobroker`. Dieser User muss in der Gruppe `dialout` sein, um auf RS485-USB-Adapter (`/dev/ttyUSB*`) zugreifen zu können.
+- ioBroker läuft als User `iobroker`. Dieser User muss in der Gruppe `dialout` sein, um auf serielle USB-Adapter (`/dev/ttyUSB*`) zugreifen zu können.
   ```bash
   groups iobroker          # muss 'dialout' enthalten
   sudo usermod -aG dialout iobroker   # falls nicht
   ```
-- RS485-USB-Adapter ist eingesteckt. Persistenten Pfad ermitteln:
+- USB-RS232-Adapter (oder ein per RS232↔RS485-Konverter angebundener RS485-Adapter, falls längere Distanz nötig) ist eingesteckt. Persistenten Pfad ermitteln:
   ```bash
   ls -l /dev/serial/by-id/
   ```
@@ -140,5 +140,5 @@ sudo rm -rf /opt/iobroker/node_modules/iobroker.heishamon /opt/iobroker/node_mod
 
 - **`EACCES: /dev/ttyUSB0`** — User `iobroker` ist nicht in `dialout`. Siehe Vorbedingungen, danach ioBroker komplett neu starten (`sudo systemctl restart iobroker`), nicht nur die Instanz: Gruppenmitgliedschaft greift erst bei neuer Session.
 - **`Cannot find module 'heishamon-protocol'`** — `heishamon-protocol` liegt nicht unter `/opt/iobroker/node_modules/heishamon-protocol/` oder dort fehlt `dist/`. Schritt 2 wiederholen.
-- **Adapter startet, aber keine Datenpunkte füllen sich** — Verkabelung/Polarität RS485 prüfen, Baudrate 9600, Pin-Belegung gegen [`docs/protocol/`](../../docs/protocol/) abgleichen. Mit Simulator gegentesten (zweiter USB-RS485 oder `socat` virtuell).
+- **Adapter startet, aber keine Datenpunkte füllen sich** — Verkabelung/Pin-Belegung am CN-CNT-Port prüfen (RS232: TX↔RX gekreuzt, GND), Baudrate 9600, gegen [`docs/protocol/`](../../docs/protocol/) abgleichen. Bei einem RS232↔RS485-Konverter zusätzlich Polarität (A/B) prüfen. Mit Simulator gegentesten (zweiter USB-Serial-Adapter oder `socat` virtuell).
 - **Set-Command landet nicht in der WP** — Read-Only-Modus in der Instanz-Konfig ist (zurecht) per Default an. Erst deaktivieren, wenn der Read-Pfad sauber läuft.

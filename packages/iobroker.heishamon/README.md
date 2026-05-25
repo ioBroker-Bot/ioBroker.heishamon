@@ -1,6 +1,6 @@
 # iobroker.heishamon
 
-ioBroker-Adapter, der direkt per RS485 mit einer Panasonic Aquarea Wärmepumpe spricht (CN-CNT-Protokoll). Kein HeishaMon-Modul, kein MQTT-Hop.
+ioBroker-Adapter, der direkt seriell mit einer Panasonic Aquarea Wärmepumpe spricht (CN-CNT-Protokoll, RS232-Pegel am CN-CNT-Port). Kein HeishaMon-Modul, kein MQTT-Hop. Für längere Kabelstrecken kann optional ein RS232↔RS485-Konverter zwischengeschaltet werden.
 
 ## Status
 

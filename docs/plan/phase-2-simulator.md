@@ -45,10 +45,10 @@ Konfigurierbar pro Anfrage-Typ und Häufigkeit (`--inject-crc-error=5%`).
 
 ## Test-Setup
 
-PC mit zwei USB-RS485-Adaptern:
+PC mit zwei USB-Serial-Adaptern (RS232 entspricht dem nativen Pegel an der WP; bei Bedarf RS232↔RS485-Konverter dazwischen):
 - Adapter A → Simulator
 - Adapter B → echtes HeishaMon-Modul
-- A/B verkabelt (A↔A, B↔B)
+- Bei RS232 gekreuzt verkabelt (TX↔RX, GND↔GND); bei RS485 A↔A, B↔B
 - HeishaMon publiziert MQTT → wir vergleichen mit den vom Simulator gesetzten Werten.
 
 ## Deliverable

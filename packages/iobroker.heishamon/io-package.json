@@ -9,16 +9,16 @@
       }
     },
     "titleLang": {
-      "en": "HeishaMon (direct RS485)",
-      "de": "HeishaMon (direkt per RS485)"
+      "en": "HeishaMon (direct serial / RS232)",
+      "de": "HeishaMon (direkt seriell / RS232)"
     },
     "title": "HeishaMon",
     "desc": {
-      "en": "Talks the Panasonic Aquarea CN-CNT protocol directly over RS485, without going through a HeishaMon module and MQTT.",
-      "de": "Spricht das Panasonic-Aquarea-CN-CNT-Protokoll direkt per RS485, ohne den Umweg ueber HeishaMon und MQTT."
+      "en": "Talks the Panasonic Aquarea CN-CNT protocol directly over a serial line (RS232 levels at the heat pump's CN-CNT port; an optional RS232/RS485 converter can be used for long cable runs), without going through a HeishaMon module and MQTT.",
+      "de": "Spricht das Panasonic-Aquarea-CN-CNT-Protokoll direkt ueber eine serielle Leitung (RS232-Pegel am CN-CNT-Port der Waermepumpe; fuer lange Kabelstrecken kann optional ein RS232/RS485-Konverter eingesetzt werden), ohne den Umweg ueber HeishaMon und MQTT."
     },
     "authors": ["Tobias Hanss <tobias.hanss@atcetera.de>"],
-    "keywords": ["heishamon", "panasonic", "aquarea", "heatpump", "rs485", "cn-cnt"],
+    "keywords": ["heishamon", "panasonic", "aquarea", "heatpump", "rs232", "rs485", "cn-cnt", "serial"],
     "license": "MIT",
     "platform": "Javascript/Node.js",
     "main": "build/main.js",

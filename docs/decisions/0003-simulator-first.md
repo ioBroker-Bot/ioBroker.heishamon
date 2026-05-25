@@ -27,5 +27,5 @@ Der Simulator wird gegen ein echtes HeishaMon-Modul validiert (Phase 2 Exit-Krit
 ## Konsequenzen
 
 - Mehr Aufwand vorab (~Phase 2 ist eine eigene Phase).
-- Hardware-Bedarf: 2× USB-RS485-Adapter am Dev-PC.
+- Hardware-Bedarf: 2× USB-Serial-Adapter am Dev-PC (RS232 entspricht dem nativen WP-Pegel; RS485 nur bei Bedarf zwischen Adapter und WP).
 - Der Simulator wird gepflegt — wenn das Protokoll erweitert wird, muss er mitgezogen werden.

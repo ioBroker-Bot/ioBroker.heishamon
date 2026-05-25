@@ -1,6 +1,6 @@
 # heishamon-sim
 
-Panasonic Aquarea Wärmepumpen-**Simulator**. Spielt auf der RS485-Leitung die Rolle der Wärmepumpe: empfängt Polls, antwortet mit Telemetrie-Frames, akzeptiert Set-Commands und passt seinen Zustand entsprechend an.
+Panasonic Aquarea Wärmepumpen-**Simulator**. Spielt auf der seriellen Leitung (RS232-Pegel wie an der echten WP; bei langen Strecken via RS232↔RS485-Konverter) die Rolle der Wärmepumpe: empfängt Polls, antwortet mit Telemetrie-Frames, akzeptiert Set-Commands und passt seinen Zustand entsprechend an.
 
 ## Wozu
 
@@ -19,4 +19,4 @@ Siehe [Phase-2-Plan](../../docs/plan/phase-2-simulator.md) und [Safety-Rules](..
 
 ## Test-Setup
 
-Zwei USB-RS485-Adapter am PC. Einer am Simulator, einer am echten HeishaMon-Modul. Verkabelt A↔A, B↔B. HeishaMon publiziert via MQTT — die Werte sollten mit dem im Simulator gesetzten Zustand übereinstimmen.
+Zwei USB-Serial-Adapter am PC (typischerweise RS232; bei Bedarf über RS232↔RS485-Konverter gebrückt). Einer am Simulator, einer am echten HeishaMon-Modul. RS232 wird gekreuzt verkabelt (TX↔RX, GND↔GND); bei RS485 entsprechend A↔A, B↔B. HeishaMon publiziert via MQTT — die Werte sollten mit dem im Simulator gesetzten Zustand übereinstimmen.

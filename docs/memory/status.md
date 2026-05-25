@@ -17,7 +17,7 @@ Snapshot Ende der Session vom 2026-05-24. Wird bei jedem größeren Meilenstein 
 ## Was als nächstes ansteht
 
 1. **Adapter in ioBroker installieren** — Anleitung (`INSTALL.md`) steht noch aus. Pragmatisch: `iobroker url <path-to-package>` oder lokales Tarball.
-2. **Adapter gegen Simulator testen** — Vorerst lokal verkabelt (zwei USB-RS485) oder per `socat` virtuell. Erwartung: alle 157 Datapoints füllen sich im Object-Tree, Set-Commands aus ioBroker landen im Simulator-State.
+2. **Adapter gegen Simulator testen** — Vorerst lokal verkabelt (zwei USB-Serial-Adapter, typischerweise RS232) oder per `socat` virtuell. Erwartung: alle 157 Datapoints füllen sich im Object-Tree, Set-Commands aus ioBroker landen im Simulator-State.
 3. **Phase 4** — Parallelbetrieb mit echter Heizung im Read-Only-Modus (im Adapter eingebaut), Datenpunkte-Vergleich mit produktivem HeishaMon, dann Cut-Over.
 
 ## Bekannte Lücken / Followups (klein)
