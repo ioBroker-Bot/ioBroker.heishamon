@@ -5,7 +5,6 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
-    project: ['./packages/*/tsconfig.json'],
   },
   plugins: ['@typescript-eslint'],
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
@@ -15,5 +14,5 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'warn',
     'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
-  ignorePatterns: ['dist/', 'node_modules/', 'vendor/', '*.cjs'],
+  ignorePatterns: ['build/', 'dist/', 'node_modules/', 'vendor/', '*.cjs'],
 };

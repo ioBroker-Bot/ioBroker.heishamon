@@ -1,0 +1,88 @@
+{
+  "common": {
+    "name": "heishamon",
+    "version": "0.0.1",
+    "news": {
+      "0.0.1": {
+        "en": "Initial adapter skeleton.",
+        "de": "Initiales Adapter-Skeleton."
+      }
+    },
+    "titleLang": {
+      "en": "HeishaMon (direct serial / RS232)",
+      "de": "HeishaMon (direkt seriell / RS232)"
+    },
+    "title": "HeishaMon",
+    "desc": {
+      "en": "Talks the Panasonic Aquarea CN-CNT protocol directly over a serial line (RS232 levels at the heat pump's CN-CNT port; an optional RS232/RS485 converter can be used for long cable runs), without going through a HeishaMon module and MQTT.",
+      "de": "Spricht das Panasonic-Aquarea-CN-CNT-Protokoll direkt ueber eine serielle Leitung (RS232-Pegel am CN-CNT-Port der Waermepumpe; fuer lange Kabelstrecken kann optional ein RS232/RS485-Konverter eingesetzt werden), ohne den Umweg ueber HeishaMon und MQTT."
+    },
+    "authors": ["Tobias Hanss <tobias.hanss@atcetera.de>"],
+    "keywords": ["heishamon", "panasonic", "aquarea", "heatpump", "rs232", "rs485", "cn-cnt", "serial"],
+    "license": "MIT",
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
+    "platform": "Javascript/Node.js",
+    "main": "build/main.js",
+    "icon": "heishamon.png",
+    "extIcon": "https://raw.githubusercontent.com/TobiasHanss/ioBroker.heishamon/main/admin/heishamon.png",
+    "readme": "https://github.com/TobiasHanss/ioBroker.heishamon/blob/main/README.md",
+    "type": "climate-control",
+    "mode": "daemon",
+    "loglevel": "info",
+    "messagebox": false,
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "supportedMessages": {
+      "custom": false,
+      "deviceManager": false
+    },
+    "dependencies": [
+      { "js-controller": ">=5.0.19" }
+    ]
+  },
+  "native": {
+    "device": "/dev/ttyUSB0",
+    "baudRate": 9600,
+    "pollIntervalSec": 5,
+    "extraPollEnabled": true,
+    "optionalPcbPollEnabled": false,
+    "readOnlyMode": false
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": {
+          "en": "Adapter information",
+          "de": "Adapter-Informationen"
+        }
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": {
+          "en": "Heat pump connection",
+          "de": "Verbindung zur Waermepumpe"
+        },
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
+}

@@ -1,20 +1,33 @@
 {
-  "name": "iobroker-heishamon-monorepo",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Monorepo for the ioBroker Panasonic Aquarea (HeishaMon-compatible) adapter — protocol library, simulator, and adapter packages.",
-  "workspaces": [
-    "packages/*"
-  ],
+  "name": "iobroker.heishamon",
+  "version": "0.0.1",
+  "description": "ioBroker adapter for Panasonic Aquarea heat pumps. Talks the CN-CNT protocol directly over a serial line (RS232 levels at the heat pump; optional RS232/RS485 converter for long cable runs) — no HeishaMon/MQTT hop required.",
+  "author": "Tobias Hanss <tobias.hanss@atcetera.de>",
+  "license": "MIT",
   "type": "module",
+  "main": "build/main.js",
   "engines": {
     "node": ">=18.18.0"
   },
+  "files": [
+    "admin",
+    "build",
+    "io-package.json",
+    "LICENSE",
+    "README.md",
+    "INSTALL.md"
+  ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "format": "prettier --write \"packages/*/src/**/*.ts\" \"packages/*/test/**/*.ts\""
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src test --ext .ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
+  },
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.1.6",
+    "serialport": "^12.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
