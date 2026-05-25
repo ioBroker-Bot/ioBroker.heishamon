@@ -56,7 +56,6 @@
     "type": "climate-control",
     "mode": "daemon",
     "tier": 3,
-    "noGit": true,
     "loglevel": "info",
     "messagebox": false,
     "compact": true,
@@ -73,7 +72,7 @@
       { "js-controller": ">=6.0.11" }
     ],
     "globalDependencies": [
-      { "admin": ">=7.6.17" }
+      { "admin": ">=7.6.20" }
     ]
   },
   "native": {

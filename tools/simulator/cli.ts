@@ -398,11 +398,12 @@ async function main(): Promise<void> {
   const parsed = parseArgs(process.argv.slice(2));
   if (parsed.kind === 'help') {
     process.stdout.write(HELP_TEXT);
-    process.exit(0);
+    return;
   }
   if (parsed.kind === 'error') {
     process.stderr.write(`error: ${parsed.error}\n\n${HELP_TEXT}`);
-    process.exit(2);
+    process.exitCode = 2;
+    return;
   }
 
   const out: ConsoleLike = {
@@ -425,7 +426,8 @@ async function main(): Promise<void> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     process.stderr.write(`failed to open ${parsed.device}: ${message}\n`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   const rl = readline.createInterface({
@@ -447,7 +449,6 @@ async function main(): Promise<void> {
       const message = error instanceof Error ? error.message : String(error);
       process.stderr.write(`failed to close ${parsed.device}: ${message}\n`);
     }
-    process.exit(0);
   };
 
   rl.on('line', (line) => {

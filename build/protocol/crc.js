@@ -1,0 +1,42 @@
+/**
+ * Panasonic CN-CNT 8-bit checksum.
+ *
+ * The protocol does not use a real CRC; the trailing byte of every frame
+ * is chosen so that the 8-bit sum over the entire frame is zero. See
+ * docs/protocol/crc.md for the full derivation.
+ */
+/**
+ * Compute the Panasonic CN-CNT checksum byte for a payload.
+ *
+ * Algorithm: two's complement of the 8-bit sum of all payload bytes.
+ * Equivalent to `(sum ^ 0xFF) + 1` used in HeishaMon, but expressed
+ * directly as `(256 - sum) & 0xFF`, which is more readable.
+ *
+ * @param payload  the frame bytes WITHOUT the trailing checksum byte
+ * @returns the checksum byte (0..255)
+ */
+export function computeChecksum(payload) {
+    let sum = 0;
+    // for..of on Uint8Array yields `number` (not `number | undefined`),
+    // which keeps the loop body free of index-access narrowing noise.
+    for (const byte of payload) {
+        sum = (sum + byte) & 0xff;
+    }
+    return (256 - sum) & 0xff;
+}
+/**
+ * Verify that a frame (including its trailing checksum byte) is valid.
+ *
+ * A frame is valid iff the 8-bit sum over ALL its bytes is zero.
+ *
+ * @param frame  the complete frame including the trailing checksum byte
+ * @returns true if the frame's checksum is valid
+ */
+export function verifyFrame(frame) {
+    let sum = 0;
+    for (const byte of frame) {
+        sum = (sum + byte) & 0xff;
+    }
+    return sum === 0;
+}
+//# sourceMappingURL=crc.js.map
