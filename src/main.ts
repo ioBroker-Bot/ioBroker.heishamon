@@ -136,6 +136,7 @@ class HeishamonAdapter extends AdapterBase {
     // so concurrent onStateChange callbacks can never overlap a poll or
     // each other. See `src/wire-queue.ts` for the rationale.
     const gapMs = cfg.setCommandGapMs ?? DEFAULT_COMMAND_GAP_MS;
+    this.log.info(`wire queue: minSendGapMs=${gapMs}`);
     this.wireQueue = new WireQueue({ minSendGapMs: gapMs });
 
     if (!cfg.readOnlyMode) {
@@ -144,7 +145,13 @@ class HeishamonAdapter extends AdapterBase {
         pollIntervalMs: cfg.pollIntervalSec * 1000,
         extraPollEnabled: cfg.extraPollEnabled,
         transport,
-        send: (frame) => wireQueue.enqueue(() => transport.send(frame)),
+        send: (frame) => {
+          this.log.debug(`poll enqueue ${frame.length}B, pending=${wireQueue.pendingCount()}`);
+          return wireQueue.enqueue(() => {
+            this.log.debug(`poll send ${frame.length}B`);
+            return transport.send(frame);
+          });
+        },
         log: logger,
         onBeforeSend: () => {
           // Any still-pending response from the previous tick missed its
@@ -374,10 +381,18 @@ class HeishamonAdapter extends AdapterBase {
       return;
     }
 
+    const enqueuedAt = Date.now();
+    this.log.debug(
+      `set enqueue ${topicName}=${numericValue}, pending=${wireQueue.pendingCount()}`,
+    );
     try {
       // Route through the shared queue so concurrent set-commands and the
       // running poller can never collide on the wire.
-      await wireQueue.enqueue(() => transport.send(frame));
+      await wireQueue.enqueue(() => {
+        const waited = Date.now() - enqueuedAt;
+        this.log.debug(`set send ${topicName}=${numericValue}, waited ${waited} ms`);
+        return transport.send(frame);
+      });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       this.log.error(`send mainSet for ${topicName} failed: ${message}`);

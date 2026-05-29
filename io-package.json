@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "heishamon",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "news": {
+      "0.0.4": {
+        "en": "Diagnostic logging for the wire queue. Logs the effective minSendGapMs at startup and emits debug entries for every poll and set enqueue/send including wait time and pending queue size.",
+        "de": "Diagnose-Logging für die Wire-Queue. Loggt den effektiven minSendGapMs beim Start und schreibt Debug-Einträge für jedes Poll- und Set-Enqueue/Send inkl. Wartezeit und Pending-Queue-Größe.",
+        "ru": "Диагностический лог очереди записи: фиксирует minSendGapMs при старте и debug-записи для каждой постановки/отправки.",
+        "pt": "Log de diagnóstico para a fila serial: registra minSendGapMs no início e entradas debug para cada enfileiramento/envio.",
+        "nl": "Diagnostische logs voor de wire-queue: logt minSendGapMs bij start en debug-regels per enqueue/send.",
+        "fr": "Journaux de diagnostic pour la file série : enregistre minSendGapMs au démarrage et chaque mise en file/envoi en debug.",
+        "it": "Log diagnostici per la coda seriale: registra minSendGapMs all'avvio e ogni enqueue/send in debug.",
+        "es": "Logs de diagnóstico para la cola serie: registra minSendGapMs al arrancar y cada enqueue/send en debug.",
+        "pl": "Diagnostyczne logi kolejki: zapisuje minSendGapMs przy starcie i każde enqueue/send w trybie debug.",
+        "uk": "Діагностичні логи черги: фіксує minSendGapMs при старті і кожне enqueue/send у debug.",
+        "zh-cn": "线路队列诊断日志：启动时记录有效的 minSendGapMs，并为每次 poll/set 入队和发送输出 debug 记录（含等待时间和队列长度）。"
+      },
       "0.0.3": {
         "en": "Serialize all wire writes through a single FIFO queue with a configurable inter-frame gap (default 200 ms). Fixes lost set commands when a script writes several datapoints at once. Pump_Duty / Max_Pump_Duty unit removed (raw 65-254 value, no physical unit).",
         "de": "Alle seriellen Schreibvorgänge laufen jetzt durch eine FIFO-Queue mit konfigurierbarem Mindest-Abstand (Default 200 ms). Behebt verlorene Set-Commands, wenn ein Skript mehrere Datapoints gleichzeitig setzt. Einheit von Pump_Duty / Max_Pump_Duty entfernt (Rohwert 65-254, keine physikalische Einheit).",

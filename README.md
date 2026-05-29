@@ -56,6 +56,9 @@ Protocol decoding builds on the work of the [HeishaMon community](https://github
     ### **WORK IN PROGRESS**
 -->
 
+### 0.0.4 (2026-05-30)
+* (Tobias Hanss) Diagnostic logging for the wire queue (effective minSendGapMs on startup, debug entries for every poll/set enqueue and send with wait time and pending queue size)
+
 ### 0.0.3 (2026-05-26)
 * (Tobias Hanss) Serialize all wire writes through a FIFO queue with a configurable inter-frame gap (default 200 ms). Fixes lost set commands when a script writes several datapoints at once
 * (Tobias Hanss) Pump_Duty / Max_Pump_Duty unit removed (raw value 65-254, no physical unit)
