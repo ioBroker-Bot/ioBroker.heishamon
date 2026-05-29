@@ -57,20 +57,29 @@ export class Poller {
         const frameType = this.nextFrameType;
         this.nextFrameType = this.computeNextFrameType(frameType);
         const frame = buildFrame(frameType);
-        if (this.options.onBeforeSend !== undefined) {
-            try {
-                this.options.onBeforeSend(frameType);
+        const send = this.options.send ?? ((bytes) => this.options.transport.send(bytes));
+        // `onBeforeSend` must fire right before the actual write so the
+        // connection-stats tracker counts the send at the moment it really
+        // hits the wire — not when the frame is merely enqueued. The hook
+        // therefore runs inside the closure handed to the sender (which may
+        // delay execution via a queue).
+        const dispatch = async () => {
+            if (this.options.onBeforeSend !== undefined) {
+                try {
+                    this.options.onBeforeSend(frameType);
+                }
+                catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    this.log('error', `onBeforeSend hook failed for ${frameType}: ${message}`);
+                    return;
+                }
             }
-            catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-                this.log('error', `onBeforeSend hook failed for ${frameType}: ${message}`);
-                return;
-            }
-        }
+            await send(frame);
+        };
         // Promise rejections must not crash the scheduler — log and move on.
         // The next tick will retry, which is the right behaviour for a flaky
         // serial link.
-        void this.options.transport.send(frame).catch((error) => {
+        void dispatch().catch((error) => {
             const message = error instanceof Error ? error.message : String(error);
             this.log('error', `failed to send ${frameType}: ${message}`);
         });

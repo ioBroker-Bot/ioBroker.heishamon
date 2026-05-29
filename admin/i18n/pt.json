@@ -13,5 +13,8 @@
   "Reserved for future SG-Ready / external thermostat support.": "Reservado para futuro suporte SG-Ready / termostato externo.",
   "Operating mode": "Modo de funcionamento",
   "Read-only mode (passive listening)": "Modo só de leitura (escuta passiva)",
-  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "Não envia consultas nem comandos. Descodifica e guarda tramas enviadas por outro master no bus (p. ex. HeishaMon em operação paralela da Fase 4)."
+  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "Não envia consultas nem comandos. Descodifica e guarda tramas enviadas por outro master no bus (p. ex. HeishaMon em operação paralela da Fase 4).",
+  "Wire pacing": "Ritmo do barramento",
+  "Minimum gap between wire operations (ms)": "Intervalo mínimo entre operações no barramento (ms)",
+  "Wait time after each frame before the next one may be sent. Prevents collisions when multiple set-commands run in parallel. Default 200 ms — raise it for very old heat-pump generations if needed.": "Tempo de espera após cada trama antes do envio seguinte. Evita colisões com vários comandos em paralelo. Padrão 200 ms — aumentar se necessário para gerações muito antigas de bomba de calor."
 }

@@ -15,12 +15,19 @@ import { buildObjectTree } from './object-tree.js';
 import { Poller } from './poller.js';
 import { StateApplier } from './state-applier.js';
 import { SerialAdapterTransport, } from './transport.js';
+import { WireQueue } from './wire-queue.js';
 /**
  * Minimum gap between two consecutive flushes of the connection-stats
  * info-states. Updates that arrive in less time are coalesced into a
  * single trailing-edge write so we don't spam the ioBroker jsonl store.
  */
 const STATS_FLUSH_THROTTLE_MS = 1000;
+/**
+ * Default minimum gap between two wire operations. Chosen to comfortably
+ * exceed a single poll round-trip on a healthy bus while still feeling
+ * snappy for interactive set-commands.
+ */
+const DEFAULT_COMMAND_GAP_MS = 200;
 // `@iobroker/adapter-core` re-types `Adapter` as a bare `AdapterConstructor`
 // without a prototype/instance type, which makes `extends utils.Adapter`
 // lose the method surface (log, setStateAsync, …). Casting the runtime
@@ -32,6 +39,7 @@ class HeishamonAdapter extends AdapterBase {
     poller = null;
     applier = null;
     nativeConfig = null;
+    wireQueue = null;
     connectionStats = new ConnectionStats();
     lastStatsFlushAt = 0;
     statsFlushTimer = null;
@@ -84,15 +92,25 @@ class HeishamonAdapter extends AdapterBase {
             return;
         }
         await this.setStateAsync('info.connection', { val: true, ack: true });
+        // The wire queue serialises *all* writes — polls and set-commands —
+        // so concurrent onStateChange callbacks can never overlap a poll or
+        // each other. See `src/wire-queue.ts` for the rationale.
+        const gapMs = cfg.setCommandGapMs ?? DEFAULT_COMMAND_GAP_MS;
+        this.wireQueue = new WireQueue({ minSendGapMs: gapMs });
         if (!cfg.readOnlyMode) {
+            const wireQueue = this.wireQueue;
             this.poller = new Poller({
                 pollIntervalMs: cfg.pollIntervalSec * 1000,
                 extraPollEnabled: cfg.extraPollEnabled,
                 transport,
+                send: (frame) => wireQueue.enqueue(() => transport.send(frame)),
                 log: logger,
                 onBeforeSend: () => {
                     // Any still-pending response from the previous tick missed its
-                    // window and counts as a timeout in the quality buffer.
+                    // window and counts as a timeout in the quality buffer. This
+                    // fires from inside the queue task, right before the actual
+                    // write hits the wire — so the bookkeeping reflects real
+                    // wire timing, not enqueue timing.
                     this.connectionStats.markPendingAsTimeout();
                     this.connectionStats.recordSent();
                     this.scheduleStatsFlush();
@@ -282,12 +300,15 @@ class HeishamonAdapter extends AdapterBase {
             return;
         }
         const transport = this.transport;
-        if (transport === null) {
+        const wireQueue = this.wireQueue;
+        if (transport === null || wireQueue === null) {
             this.log.error(`onStateChange: transport not ready, dropping set for ${topicName}`);
             return;
         }
         try {
-            await transport.send(frame);
+            // Route through the shared queue so concurrent set-commands and the
+            // running poller can never collide on the wire.
+            await wireQueue.enqueue(() => transport.send(frame));
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -310,6 +331,7 @@ class HeishamonAdapter extends AdapterBase {
                 await this.transport.close();
                 this.transport = null;
             }
+            this.wireQueue = null;
             await this.setStateAsync('info.connection', { val: false, ack: true });
         }
         catch (error) {

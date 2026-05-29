@@ -13,5 +13,8 @@
   "Reserved for future SG-Ready / external thermostat support.": "Gereserveerd voor toekomstige SG-Ready / externe thermostaat-ondersteuning.",
   "Operating mode": "Bedrijfsmodus",
   "Read-only mode (passive listening)": "Alleen-lezen-modus (passief luisteren)",
-  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "Verstuur geen polls of set-commando's. Decodeer en sla frames op die door een andere master op de bus worden verstuurd (bv. HeishaMon tijdens Fase-4 parallelbedrijf)."
+  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "Verstuur geen polls of set-commando's. Decodeer en sla frames op die door een andere master op de bus worden verstuurd (bv. HeishaMon tijdens Fase-4 parallelbedrijf).",
+  "Wire pacing": "Bus-timing",
+  "Minimum gap between wire operations (ms)": "Minimale tussentijd tussen busbewerkingen (ms)",
+  "Wait time after each frame before the next one may be sent. Prevents collisions when multiple set-commands run in parallel. Default 200 ms — raise it for very old heat-pump generations if needed.": "Wachttijd na elk frame voordat het volgende mag worden verzonden. Voorkomt botsingen bij meerdere parallelle set-commando's. Standaard 200 ms — indien nodig verhogen voor zeer oude warmtepompgeneraties."
 }

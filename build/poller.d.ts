@@ -16,10 +16,29 @@ export interface PollerTimers {
     readonly setInterval: (fn: () => void, ms: number) => NodeJS.Timeout | number;
     readonly clearInterval: (handle: NodeJS.Timeout | number) => void;
 }
+/**
+ * Hand-off contract for a single send operation. The poller passes the frame
+ * to the sender, which is responsible for routing it through whatever
+ * serialisation layer (e.g. a `WireQueue`) the adapter has wired up. The
+ * returned promise resolves once the byte stream has been handed to the
+ * transport.
+ */
+export type FrameSender = (frame: Uint8Array) => Promise<void>;
 export interface PollerOptions {
     readonly pollIntervalMs: number;
     readonly extraPollEnabled: boolean;
+    /**
+     * Direct transport reference. Used when no `send` override is supplied —
+     * the poller calls `transport.send(frame)` itself. Tests can drop this in
+     * to keep the previous semantics.
+     */
     readonly transport: AdapterTransport;
+    /**
+     * Optional indirection layer. When provided, the poller hands every frame
+     * to this function instead of calling `transport.send` directly. Production
+     * code passes a closure that pushes through the shared `WireQueue`.
+     */
+    readonly send?: FrameSender;
     readonly log?: Logger;
     /**
      * Invoked synchronously right before each poll frame is handed to the

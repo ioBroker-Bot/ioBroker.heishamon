@@ -92,6 +92,26 @@
       "md": 6,
       "lg": 6,
       "xl": 4
+    },
+    "_wire": {
+      "type": "header",
+      "size": 3,
+      "text": "Wire pacing",
+      "newLine": true
+    },
+    "setCommandGapMs": {
+      "type": "number",
+      "label": "Minimum gap between wire operations (ms)",
+      "help": "Wait time after each frame before the next one may be sent. Prevents collisions when multiple set-commands run in parallel. Default 200 ms — raise it for very old heat-pump generations if needed.",
+      "default": 200,
+      "min": 0,
+      "max": 5000,
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 8,
+      "lg": 6,
+      "xl": 4
     }
   }
 }

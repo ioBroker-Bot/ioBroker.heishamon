@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "heishamon",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "news": {
+      "0.0.3": {
+        "en": "Serialize all wire writes through a single FIFO queue with a configurable inter-frame gap (default 200 ms). Fixes lost set commands when a script writes several datapoints at once. Pump_Duty / Max_Pump_Duty unit removed (raw 65-254 value, no physical unit).",
+        "de": "Alle seriellen Schreibvorgänge laufen jetzt durch eine FIFO-Queue mit konfigurierbarem Mindest-Abstand (Default 200 ms). Behebt verlorene Set-Commands, wenn ein Skript mehrere Datapoints gleichzeitig setzt. Einheit von Pump_Duty / Max_Pump_Duty entfernt (Rohwert 65-254, keine physikalische Einheit).",
+        "ru": "Все записи на шину сериализуются через FIFO-очередь с настраиваемым интервалом (по умолчанию 200 мс). Исправляет потерю set-команд при одновременной записи нескольких точек скриптом. У Pump_Duty / Max_Pump_Duty убрана единица (сырое значение 65-254).",
+        "pt": "Todas as escritas no barramento passam por uma fila FIFO com intervalo configurável (padrão 200 ms). Corrige perda de set-commands quando um script grava vários pontos ao mesmo tempo. Unidade de Pump_Duty / Max_Pump_Duty removida (valor bruto 65-254).",
+        "nl": "Alle schrijfacties naar de bus lopen via een FIFO-wachtrij met instelbare tussenpauze (standaard 200 ms). Lost verloren set-commando's op wanneer een script meerdere datapunten tegelijk schrijft. Eenheid van Pump_Duty / Max_Pump_Duty verwijderd (ruwe waarde 65-254).",
+        "fr": "Toutes les écritures série passent par une file FIFO avec un délai configurable (200 ms par défaut). Corrige la perte de commandes set lorsqu'un script écrit plusieurs datapoints simultanément. Unité de Pump_Duty / Max_Pump_Duty retirée (valeur brute 65-254).",
+        "it": "Tutte le scritture seriali passano da una coda FIFO con intervallo configurabile (default 200 ms). Risolve la perdita di set command quando uno script scrive più datapoint contemporaneamente. Unità di Pump_Duty / Max_Pump_Duty rimossa (valore grezzo 65-254).",
+        "es": "Todas las escrituras serie pasan por una cola FIFO con intervalo configurable (200 ms por defecto). Corrige la pérdida de set-commands cuando un script escribe varios datapoints a la vez. Unidad de Pump_Duty / Max_Pump_Duty eliminada (valor crudo 65-254).",
+        "pl": "Wszystkie zapisy na szynę przechodzą przez kolejkę FIFO z konfigurowalnym odstępem (domyślnie 200 ms). Naprawia utratę set-commandów, gdy skrypt zapisuje kilka datapointów naraz. Jednostka Pump_Duty / Max_Pump_Duty usunięta (wartość surowa 65-254).",
+        "uk": "Усі записи в порт проходять через FIFO-чергу з налаштовуваним інтервалом (за замовч. 200 мс). Виправляє втрату set-команд, коли скрипт пише кілька datapoint-ів одночасно. Одиницю Pump_Duty / Max_Pump_Duty прибрано (сире значення 65-254).",
+        "zh-cn": "所有串口写入通过统一的 FIFO 队列发送，帧间间隔可配置（默认 200 毫秒）。修复脚本同时写入多个数据点时 set 命令丢失的问题。移除 Pump_Duty / Max_Pump_Duty 的单位（原始值 65-254，无物理单位）。"
+      },
       "0.0.2": {
         "en": "Engines requirement relaxed to node >= 20 (was 22) so the adapter installs on current ioBroker LTS hosts.",
         "de": "Engine-Anforderung auf Node >= 20 (vorher 22) gelockert, damit der Adapter auf aktuellen ioBroker-LTS-Hosts installiert.",
@@ -94,7 +107,8 @@
     "pollIntervalSec": 5,
     "extraPollEnabled": true,
     "optionalPcbPollEnabled": false,
-    "readOnlyMode": false
+    "readOnlyMode": false,
+    "setCommandGapMs": 200
   },
   "objects": [],
   "instanceObjects": [

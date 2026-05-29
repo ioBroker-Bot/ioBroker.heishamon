@@ -13,5 +13,8 @@
   "Reserved for future SG-Ready / external thermostat support.": "Зарезервировано для будущей поддержки SG-Ready / внешнего термостата.",
   "Operating mode": "Режим работы",
   "Read-only mode (passive listening)": "Режим только чтения (пассивное прослушивание)",
-  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "Не отправляет опросы и команды. Декодирует и сохраняет кадры, отправляемые другим мастером на шине (например, HeishaMon при параллельной работе фазы 4)."
+  "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "Не отправляет опросы и команды. Декодирует и сохраняет кадры, отправляемые другим мастером на шине (например, HeishaMon при параллельной работе фазы 4).",
+  "Wire pacing": "Тактование шины",
+  "Minimum gap between wire operations (ms)": "Минимальный интервал между операциями на шине (мс)",
+  "Wait time after each frame before the next one may be sent. Prevents collisions when multiple set-commands run in parallel. Default 200 ms — raise it for very old heat-pump generations if needed.": "Время ожидания после каждого кадра перед отправкой следующего. Предотвращает коллизии при параллельных командах записи. По умолчанию 200 мс — для очень старых поколений тепловых насосов при необходимости увеличьте."
 }

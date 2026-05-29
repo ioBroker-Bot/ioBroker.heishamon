@@ -20,10 +20,30 @@ export interface PollerTimers {
   readonly clearInterval: (handle: NodeJS.Timeout | number) => void;
 }
 
+/**
+ * Hand-off contract for a single send operation. The poller passes the frame
+ * to the sender, which is responsible for routing it through whatever
+ * serialisation layer (e.g. a `WireQueue`) the adapter has wired up. The
+ * returned promise resolves once the byte stream has been handed to the
+ * transport.
+ */
+export type FrameSender = (frame: Uint8Array) => Promise<void>;
+
 export interface PollerOptions {
   readonly pollIntervalMs: number;
   readonly extraPollEnabled: boolean;
+  /**
+   * Direct transport reference. Used when no `send` override is supplied —
+   * the poller calls `transport.send(frame)` itself. Tests can drop this in
+   * to keep the previous semantics.
+   */
   readonly transport: AdapterTransport;
+  /**
+   * Optional indirection layer. When provided, the poller hands every frame
+   * to this function instead of calling `transport.send` directly. Production
+   * code passes a closure that pushes through the shared `WireQueue`.
+   */
+  readonly send?: FrameSender;
   readonly log?: Logger;
   /**
    * Invoked synchronously right before each poll frame is handed to the
@@ -89,19 +109,30 @@ export class Poller {
     this.nextFrameType = this.computeNextFrameType(frameType);
 
     const frame = buildFrame(frameType);
-    if (this.options.onBeforeSend !== undefined) {
-      try {
-        this.options.onBeforeSend(frameType);
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
-        this.log('error', `onBeforeSend hook failed for ${frameType}: ${message}`);
-        return;
+    const send = this.options.send ?? ((bytes) => this.options.transport.send(bytes));
+
+    // `onBeforeSend` must fire right before the actual write so the
+    // connection-stats tracker counts the send at the moment it really
+    // hits the wire — not when the frame is merely enqueued. The hook
+    // therefore runs inside the closure handed to the sender (which may
+    // delay execution via a queue).
+    const dispatch = async (): Promise<void> => {
+      if (this.options.onBeforeSend !== undefined) {
+        try {
+          this.options.onBeforeSend(frameType);
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.log('error', `onBeforeSend hook failed for ${frameType}: ${message}`);
+          return;
+        }
       }
-    }
+      await send(frame);
+    };
+
     // Promise rejections must not crash the scheduler — log and move on.
     // The next tick will retry, which is the right behaviour for a flaky
     // serial link.
-    void this.options.transport.send(frame).catch((error: unknown) => {
+    void dispatch().catch((error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
       this.log('error', `failed to send ${frameType}: ${message}`);
     });

@@ -14,6 +14,7 @@ declare class HeishamonAdapter extends AdapterBase {
     private poller;
     private applier;
     private nativeConfig;
+    private wireQueue;
     private readonly connectionStats;
     private lastStatsFlushAt;
     private statsFlushTimer;
