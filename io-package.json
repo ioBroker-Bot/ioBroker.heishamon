@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "heishamon",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "news": {
+      "0.0.5": {
+        "en": "Wire-queue gap is now enforced between every pair of sends, including across idle periods (the previous design only inserted the gap while several tasks were stacked up in the queue). Queue is hard-capped at 100 pending entries to prevent memory growth; overflows are logged and the dropped send is skipped.",
+        "de": "Der Mindestabstand der Wire-Queue gilt jetzt zwischen jedem Sende-Paar, auch über Leerläufe hinweg (vorher griff der Abstand nur, solange mehrere Tasks gestapelt in der Queue lagen). Queue ist hart auf 100 Einträge begrenzt, Überlauf wird geloggt und die Sendung verworfen.",
+        "ru": "Промежуток между записями теперь соблюдается между каждой парой отправок, в том числе во время простоев. Очередь ограничена 100 записями, переполнение логируется и отбрасывается.",
+        "pt": "O intervalo entre escritas é agora respeitado entre cada par de envios, incluindo durante períodos ociosos. Fila limitada a 100 entradas; estouro é registrado e o envio descartado.",
+        "nl": "De minimale tussentijd geldt nu tussen elk zendpaar, ook over inactieve periodes. Wachtrij is begrensd op 100 items; overflow wordt gelogd en de send overgeslagen.",
+        "fr": "L'intervalle minimal s'applique désormais entre chaque paire d'envois, y compris pendant les périodes inactives. File plafonnée à 100 entrées ; les débordements sont journalisés et l'envoi écarté.",
+        "it": "L'intervallo minimo viene ora rispettato tra ogni coppia di invii, anche durante periodi inattivi. Coda limitata a 100 voci; overflow viene loggato e l'invio scartato.",
+        "es": "El intervalo mínimo se respeta ahora entre cada par de envíos, incluso durante períodos inactivos. Cola limitada a 100 entradas; el desbordamiento se registra y el envío se descarta.",
+        "pl": "Minimalna przerwa jest teraz egzekwowana między każdą parą wysyłek, także w okresach bezczynności. Kolejka ograniczona do 100 wpisów; przepełnienie jest logowane, a wysyłka pomijana.",
+        "uk": "Мінімальний інтервал тепер дотримується між кожною парою відправок, у тому числі під час простоїв. Черга обмежена 100 записами; переповнення логується, відправлення відкидається.",
+        "zh-cn": "线路队列间隔现在在每两次发送之间生效，即使队列在中间清空过（之前只有在多个任务堆积时才生效）。队列硬上限 100 条，溢出将被记录并丢弃。"
+      },
       "0.0.4": {
         "en": "Diagnostic logging for the wire queue. Logs the effective minSendGapMs at startup and emits debug entries for every poll and set enqueue/send including wait time and pending queue size.",
         "de": "Diagnose-Logging für die Wire-Queue. Loggt den effektiven minSendGapMs beim Start und schreibt Debug-Einträge für jedes Poll- und Set-Enqueue/Send inkl. Wartezeit und Pending-Queue-Größe.",

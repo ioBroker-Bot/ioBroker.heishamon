@@ -9,21 +9,33 @@
  * with a command queue plus a fixed minimum gap between successive sends; we
  * replicate that behaviour here.
  *
- * The class is pure logic — no ioBroker, no transport, no timers beyond the
- * injectable `sleep`. Callers pass in a task that returns a `Promise<void>`,
- * typically a closure over `transport.send(frame)`.
+ * The class is pure logic — no ioBroker, no transport. Callers pass in a
+ * task that returns a `Promise<void>`, typically a closure over
+ * `transport.send(frame)`. `sleep` and `now` are injectable so tests can
+ * drive the queue deterministically.
+ *
+ * The gap is enforced between every two successive sends, including across
+ * periods where the queue ran empty. A fresh task that arrives long after
+ * the last send runs without waiting; one that arrives shortly after waits
+ * just long enough to honour the configured gap.
  */
 
 export type SleepFn = (ms: number) => Promise<void>;
+export type NowFn = () => number;
 
 export interface WireQueueOptions {
-  /** Minimum delay between the completion of one task and the start of the next. */
+  /** Minimum delay between the completion of one send and the start of the next. */
   readonly minSendGapMs: number;
   /**
-   * Override for the gap delay — primarily a test seam so unit tests can
-   * verify the requested gap without burning real wall-clock time.
+   * Hard cap on entries waiting in the queue. enqueue() rejects when the
+   * queue already holds this many entries (the running task does not count).
+   * Defaults to 100, which is far above any healthy steady-state load.
    */
+  readonly maxQueueSize?: number;
+  /** Test seam — defaults to setTimeout-based sleep. */
   readonly sleep?: SleepFn;
+  /** Test seam — defaults to Date.now. */
+  readonly now?: NowFn;
 }
 
 interface QueueEntry {
@@ -37,11 +49,27 @@ const defaultSleep: SleepFn = (ms) =>
     setTimeout(resolve, ms);
   });
 
+const defaultNow: NowFn = () => Date.now();
+
+const DEFAULT_MAX_QUEUE_SIZE = 100;
+
+export class WireQueueFullError extends Error {
+  constructor(public readonly maxQueueSize: number) {
+    super(`WireQueue: queue full (max ${maxQueueSize}), dropping task`);
+    this.name = 'WireQueueFullError';
+  }
+}
+
 export class WireQueue {
   private readonly minSendGapMs: number;
+  private readonly maxQueueSize: number;
   private readonly sleep: SleepFn;
+  private readonly now: NowFn;
   private readonly entries: QueueEntry[] = [];
   private running = false;
+  // Wall-clock timestamp (ms) at which the previous send finished. Negative
+  // sentinel marks "no send yet" so the first task never waits.
+  private lastSendCompletedAt = Number.NEGATIVE_INFINITY;
 
   constructor(options: WireQueueOptions) {
     if (!Number.isFinite(options.minSendGapMs) || options.minSendGapMs < 0) {
@@ -49,23 +77,32 @@ export class WireQueue {
         `WireQueue: minSendGapMs must be a non-negative finite number, got ${options.minSendGapMs}`,
       );
     }
+    const maxSize = options.maxQueueSize ?? DEFAULT_MAX_QUEUE_SIZE;
+    if (!Number.isInteger(maxSize) || maxSize <= 0) {
+      throw new Error(`WireQueue: maxQueueSize must be a positive integer, got ${maxSize}`);
+    }
     this.minSendGapMs = options.minSendGapMs;
+    this.maxQueueSize = maxSize;
     this.sleep = options.sleep ?? defaultSleep;
+    this.now = options.now ?? defaultNow;
   }
 
   /**
    * Append a task to the FIFO queue. The returned promise resolves once the
-   * task has run to completion, or rejects with the task's error.
-   * A task that throws does NOT abort the queue — the next entry runs after
-   * the usual gap.
+   * task has run to completion, rejects with the task's error, or rejects
+   * with `WireQueueFullError` if the queue is already at capacity.
+   *
+   * A task that throws does NOT abort the queue — the next entry still runs
+   * after the usual gap.
    */
   enqueue(task: () => Promise<void>): Promise<void> {
+    if (this.entries.length >= this.maxQueueSize) {
+      return Promise.reject(new WireQueueFullError(this.maxQueueSize));
+    }
     return new Promise<void>((resolve, reject) => {
       this.entries.push({ task, resolve, reject });
       if (!this.running) {
         this.running = true;
-        // Kick the drain loop off the microtask queue so callers can finish
-        // enqueueing related work synchronously before anything fires.
         void this.drain();
       }
     });
@@ -76,14 +113,21 @@ export class WireQueue {
     return this.entries.length;
   }
 
+  /** Configured queue capacity, for diagnostics. */
+  capacity(): number {
+    return this.maxQueueSize;
+  }
+
   private async drain(): Promise<void> {
     try {
-      let first = true;
       while (this.entries.length > 0) {
-        if (!first && this.minSendGapMs > 0) {
-          await this.sleep(this.minSendGapMs);
+        if (this.minSendGapMs > 0) {
+          const elapsed = this.now() - this.lastSendCompletedAt;
+          const wait = this.minSendGapMs - elapsed;
+          if (wait > 0 && Number.isFinite(wait)) {
+            await this.sleep(wait);
+          }
         }
-        first = false;
 
         const entry = this.entries.shift();
         if (entry === undefined) {
@@ -95,6 +139,9 @@ export class WireQueue {
         } catch (error: unknown) {
           entry.reject(error);
         }
+        // Record completion AFTER the task finished so the gap covers both
+        // the task duration and the configured idle window.
+        this.lastSendCompletedAt = this.now();
       }
     } finally {
       this.running = false;

@@ -56,6 +56,10 @@ Protocol decoding builds on the work of the [HeishaMon community](https://github
     ### **WORK IN PROGRESS**
 -->
 
+### 0.0.5 (2026-05-30)
+* (Tobias Hanss) Wire-queue gap is now enforced between every pair of sends, including across idle periods (previously the gap only applied while multiple tasks were already stacked in the queue — so polls and isolated sets bypassed it entirely)
+* (Tobias Hanss) Queue is hard-capped at 100 pending entries; overflows are logged at warn level and the dropped send is skipped instead of silently piling up
+
 ### 0.0.4 (2026-05-30)
 * (Tobias Hanss) Diagnostic logging for the wire queue (effective minSendGapMs on startup, debug entries for every poll/set enqueue and send with wait time and pending queue size)
 

@@ -1,29 +1,40 @@
 import { describe, expect, it } from 'vitest';
 
-import { WireQueue, type SleepFn } from '../../src/wire-queue.js';
+import {
+  WireQueue,
+  WireQueueFullError,
+  type NowFn,
+  type SleepFn,
+} from '../../src/wire-queue.js';
 
 /**
- * Build a deterministic sleep mock that records every requested gap value
- * and resolves immediately so tests do not depend on real time.
+ * Deterministic test harness: a virtual clock that advances exactly by the
+ * `sleep()` durations the queue requests. Real wall-clock time is never read.
  */
-function createSleepRecorder(): { sleep: SleepFn; gaps: number[] } {
+function createClock(): {
+  sleep: SleepFn;
+  now: NowFn;
+  gaps: number[];
+  advance: (ms: number) => void;
+} {
   const gaps: number[] = [];
+  let virtualNow = 0;
   const sleep: SleepFn = (ms) => {
     gaps.push(ms);
+    virtualNow += ms;
     return Promise.resolve();
   };
-  return { sleep, gaps };
-}
-
-/** Helper that flushes pending micro/macro tasks. */
-function flush(): Promise<void> {
-  return new Promise((resolve) => setImmediate(resolve));
+  const now: NowFn = () => virtualNow;
+  const advance = (ms: number): void => {
+    virtualNow += ms;
+  };
+  return { sleep, now, gaps, advance };
 }
 
 describe('WireQueue', () => {
   it('runs a single enqueued task and resolves the returned promise', async () => {
-    const { sleep, gaps } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 100, sleep });
+    const { sleep, now, gaps } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 100, sleep, now });
 
     let ran = false;
     await queue.enqueue(async () => {
@@ -35,27 +46,27 @@ describe('WireQueue', () => {
   });
 
   it('runs multiple tasks in FIFO order', async () => {
-    const { sleep } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 50, sleep });
+    const { sleep, now } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 50, sleep, now });
 
     const order: number[] = [];
-    const p1 = queue.enqueue(async () => {
-      order.push(1);
-    });
-    const p2 = queue.enqueue(async () => {
-      order.push(2);
-    });
-    const p3 = queue.enqueue(async () => {
-      order.push(3);
-    });
-
-    await Promise.all([p1, p2, p3]);
+    await Promise.all([
+      queue.enqueue(async () => {
+        order.push(1);
+      }),
+      queue.enqueue(async () => {
+        order.push(2);
+      }),
+      queue.enqueue(async () => {
+        order.push(3);
+      }),
+    ]);
     expect(order).toEqual([1, 2, 3]);
   });
 
   it('serialises tasks — never runs two in parallel', async () => {
-    const { sleep } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 0, sleep });
+    const { sleep, now } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 0, sleep, now });
 
     let active = 0;
     let maxActive = 0;
@@ -77,8 +88,8 @@ describe('WireQueue', () => {
   });
 
   it('inserts the configured gap between successive tasks', async () => {
-    const { sleep, gaps } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 200, sleep });
+    const { sleep, now, gaps } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 200, sleep, now });
 
     await Promise.all([
       queue.enqueue(async () => {}),
@@ -86,22 +97,63 @@ describe('WireQueue', () => {
       queue.enqueue(async () => {}),
     ]);
 
-    // Two gaps for three tasks: gap fires between #1->#2 and #2->#3.
+    // First task: no wait (lastSendCompletedAt = -Infinity).
+    // Between #1 and #2: full 200 ms gap.
+    // Between #2 and #3: full 200 ms gap.
     expect(gaps).toEqual([200, 200]);
   });
 
   it('does not insert a gap before the first task', async () => {
-    const { sleep, gaps } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 500, sleep });
+    const { sleep, now, gaps } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 500, sleep, now });
 
     await queue.enqueue(async () => {});
 
     expect(gaps).toEqual([]);
   });
 
+  it('enforces the gap across queue-idle periods (the v0.0.5 fix)', async () => {
+    // Regression test for the design bug in 0.0.3/0.0.4: the queue dropped
+    // out of its drain loop between tasks, so a fresh enqueue right after
+    // an idle period skipped the gap entirely.
+    const { sleep, now, gaps } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 5000, sleep, now });
+
+    await queue.enqueue(async () => {});
+    // Queue went idle. Caller enqueues again much sooner than the gap.
+    await queue.enqueue(async () => {});
+
+    expect(gaps).toEqual([5000]);
+  });
+
+  it('does not wait if the configured gap has already elapsed', async () => {
+    const { sleep, now, gaps, advance } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 1000, sleep, now });
+
+    await queue.enqueue(async () => {});
+    // Pretend a lot of real time passed.
+    advance(10_000);
+    await queue.enqueue(async () => {});
+
+    expect(gaps).toEqual([]);
+  });
+
+  it('waits only the remaining time when partial gap has elapsed', async () => {
+    const { sleep, now, gaps, advance } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 1000, sleep, now });
+
+    await queue.enqueue(async () => {});
+    // 300 ms have passed in the meantime.
+    advance(300);
+    await queue.enqueue(async () => {});
+
+    // Remaining gap = 1000 - 300 = 700 ms.
+    expect(gaps).toEqual([700]);
+  });
+
   it('rejects the caller promise when the task throws but keeps the queue running', async () => {
-    const { sleep } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 0, sleep });
+    const { sleep, now } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 0, sleep, now });
 
     const order: string[] = [];
     const failing = queue.enqueue(async () => {
@@ -118,8 +170,8 @@ describe('WireQueue', () => {
   });
 
   it('inserts the gap even after a failing task', async () => {
-    const { sleep, gaps } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 300, sleep });
+    const { sleep, now, gaps } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 300, sleep, now });
 
     const failing = queue.enqueue(async () => {
       throw new Error('nope');
@@ -133,8 +185,8 @@ describe('WireQueue', () => {
   });
 
   it('reports pendingCount correctly before, during and after execution', async () => {
-    const { sleep } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 0, sleep });
+    const { sleep, now } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 0, sleep, now });
 
     expect(queue.pendingCount()).toBe(0);
 
@@ -149,7 +201,6 @@ describe('WireQueue', () => {
     const p2 = queue.enqueue(async () => {});
     const p3 = queue.enqueue(async () => {});
 
-    // Three enqueued; the drain loop has already picked one to run.
     await Promise.resolve();
     expect(queue.pendingCount()).toBe(2);
 
@@ -159,8 +210,8 @@ describe('WireQueue', () => {
   });
 
   it('with minSendGapMs=0 does not request any sleeps but still runs FIFO', async () => {
-    const { sleep, gaps } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 0, sleep });
+    const { sleep, now, gaps } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 0, sleep, now });
 
     const order: number[] = [];
     await Promise.all([
@@ -179,73 +230,9 @@ describe('WireQueue', () => {
     expect(gaps).toEqual([]);
   });
 
-  it('handles enqueue() while the queue is draining', async () => {
-    const { sleep, gaps } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 10, sleep });
-
-    const order: string[] = [];
-
-    const first = queue.enqueue(async () => {
-      order.push('first');
-    });
-
-    // Append while the first task is still in flight (resolves microtask later).
-    const second = queue.enqueue(async () => {
-      order.push('second');
-    });
-
-    await first;
-    const late = queue.enqueue(async () => {
-      order.push('late');
-    });
-
-    await Promise.all([second, late]);
-    expect(order).toEqual(['first', 'second', 'late']);
-    // Two gaps: between first->second and second->late.
-    expect(gaps).toEqual([10, 10]);
-  });
-
-  it('restarts the drain loop when a new task is enqueued after the queue idled', async () => {
-    const { sleep, gaps } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 25, sleep });
-
-    let ran1 = false;
-    await queue.enqueue(async () => {
-      ran1 = true;
-    });
-    expect(ran1).toBe(true);
-
-    let ran2 = false;
-    await queue.enqueue(async () => {
-      ran2 = true;
-    });
-    expect(ran2).toBe(true);
-
-    // Queue went idle between the two enqueue() calls, so no gap is needed
-    // before the second standalone task.
-    expect(gaps).toEqual([]);
-  });
-
-  it('continues after a rejection followed by a fresh enqueue', async () => {
-    const { sleep } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 0, sleep });
-
-    await expect(
-      queue.enqueue(async () => {
-        throw new Error('first-fail');
-      }),
-    ).rejects.toThrow('first-fail');
-
-    let ran = false;
-    await queue.enqueue(async () => {
-      ran = true;
-    });
-    expect(ran).toBe(true);
-  });
-
   it('propagates the original error object to the caller', async () => {
-    const { sleep } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 0, sleep });
+    const { sleep, now } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 0, sleep, now });
 
     const sentinel = new Error('sentinel');
     await expect(
@@ -255,7 +242,7 @@ describe('WireQueue', () => {
     ).rejects.toBe(sentinel);
   });
 
-  it('uses the default sleep when no override is provided (smoke test)', async () => {
+  it('uses the default sleep and now when no overrides are provided (smoke test)', async () => {
     const queue = new WireQueue({ minSendGapMs: 1 });
 
     const order: number[] = [];
@@ -281,8 +268,8 @@ describe('WireQueue', () => {
   });
 
   it('preserves FIFO order across a many-task burst', async () => {
-    const { sleep } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 0, sleep });
+    const { sleep, now } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 0, sleep, now });
 
     const order: number[] = [];
     const tasks: Array<Promise<void>> = [];
@@ -301,8 +288,8 @@ describe('WireQueue', () => {
   });
 
   it('keeps draining when one of many tasks fails', async () => {
-    const { sleep } = createSleepRecorder();
-    const queue = new WireQueue({ minSendGapMs: 0, sleep });
+    const { sleep, now } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 0, sleep, now });
 
     const order: number[] = [];
     const results: Array<Promise<void>> = [];
@@ -323,9 +310,76 @@ describe('WireQueue', () => {
     expect(settled[4]?.status).toBe('fulfilled');
   });
 
-  it('flush helper is available for integration-style waits', async () => {
-    // Sanity check the shared flush helper used by other tests.
-    await flush();
-    expect(true).toBe(true);
+  describe('capacity cap', () => {
+    it('rejects new enqueues with WireQueueFullError when capacity is exceeded', async () => {
+      const { sleep, now } = createClock();
+      const queue = new WireQueue({ minSendGapMs: 0, maxQueueSize: 3, sleep, now });
+
+      // Block the running task so the others actually pile up.
+      let release = (): void => {};
+      const block = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+
+      const inflight = queue.enqueue(async () => {
+        await block;
+      });
+      const a = queue.enqueue(async () => {});
+      const b = queue.enqueue(async () => {});
+      const c = queue.enqueue(async () => {});
+
+      // Queue now has the running task (not counted) + 3 pending = at capacity.
+      expect(queue.pendingCount()).toBe(3);
+
+      const rejected = queue.enqueue(async () => {});
+      await expect(rejected).rejects.toBeInstanceOf(WireQueueFullError);
+
+      release();
+      await Promise.all([inflight, a, b, c]);
+    });
+
+    it('accepts new enqueues again after the queue drained below capacity', async () => {
+      const { sleep, now } = createClock();
+      const queue = new WireQueue({ minSendGapMs: 0, maxQueueSize: 2, sleep, now });
+
+      let release = (): void => {};
+      const block = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+
+      const inflight = queue.enqueue(async () => {
+        await block;
+      });
+      const a = queue.enqueue(async () => {});
+      const b = queue.enqueue(async () => {});
+
+      await expect(queue.enqueue(async () => {})).rejects.toBeInstanceOf(WireQueueFullError);
+
+      release();
+      await Promise.all([inflight, a, b]);
+
+      // Fresh enqueue must succeed now.
+      let ran = false;
+      await queue.enqueue(async () => {
+        ran = true;
+      });
+      expect(ran).toBe(true);
+    });
+
+    it('exposes the configured capacity via capacity()', () => {
+      const queue = new WireQueue({ minSendGapMs: 0, maxQueueSize: 42 });
+      expect(queue.capacity()).toBe(42);
+    });
+
+    it('defaults capacity to 100 when not explicitly set', () => {
+      const queue = new WireQueue({ minSendGapMs: 0 });
+      expect(queue.capacity()).toBe(100);
+    });
+
+    it('throws synchronously for invalid maxQueueSize', () => {
+      expect(() => new WireQueue({ minSendGapMs: 0, maxQueueSize: 0 })).toThrow();
+      expect(() => new WireQueue({ minSendGapMs: 0, maxQueueSize: -1 })).toThrow();
+      expect(() => new WireQueue({ minSendGapMs: 0, maxQueueSize: 1.5 })).toThrow();
+    });
   });
 });

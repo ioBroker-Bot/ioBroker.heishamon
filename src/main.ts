@@ -28,7 +28,7 @@ import {
   type LogLevel,
   type Logger,
 } from './transport.js';
-import { WireQueue } from './wire-queue.js';
+import { WireQueue, WireQueueFullError } from './wire-queue.js';
 
 /**
  * Minimum gap between two consecutive flushes of the connection-stats
@@ -136,8 +136,10 @@ class HeishamonAdapter extends AdapterBase {
     // so concurrent onStateChange callbacks can never overlap a poll or
     // each other. See `src/wire-queue.ts` for the rationale.
     const gapMs = cfg.setCommandGapMs ?? DEFAULT_COMMAND_GAP_MS;
-    this.log.info(`wire queue: minSendGapMs=${gapMs}`);
     this.wireQueue = new WireQueue({ minSendGapMs: gapMs });
+    this.log.info(
+      `wire queue: minSendGapMs=${gapMs}, capacity=${this.wireQueue.capacity()}`,
+    );
 
     if (!cfg.readOnlyMode) {
       const wireQueue = this.wireQueue;
@@ -394,6 +396,12 @@ class HeishamonAdapter extends AdapterBase {
         return transport.send(frame);
       });
     } catch (error: unknown) {
+      if (error instanceof WireQueueFullError) {
+        this.log.warn(
+          `wire queue full (cap ${error.maxQueueSize}), dropping set ${topicName}=${numericValue}`,
+        );
+        return;
+      }
       const message = error instanceof Error ? error.message : String(error);
       this.log.error(`send mainSet for ${topicName} failed: ${message}`);
       return;
