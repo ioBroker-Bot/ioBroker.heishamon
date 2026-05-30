@@ -10,6 +10,7 @@
 import { pathToFileURL } from 'node:url';
 import * as utils from '@iobroker/adapter-core';
 import { encodeSetCommand, findByName, } from './protocol/index.js';
+import { BusExchange, DEFAULT_MAX_RETRIES, DEFAULT_RESPONSE_TIMEOUT_MS, } from './bus-exchange.js';
 import { ConnectionStats } from './connection-stats.js';
 import { buildObjectTree } from './object-tree.js';
 import { Poller } from './poller.js';
@@ -49,6 +50,7 @@ class HeishamonAdapter extends AdapterBase {
     applier = null;
     nativeConfig = null;
     wireQueue = null;
+    busExchange = null;
     connectionStats = new ConnectionStats();
     lastStatsFlushAt = 0;
     statsFlushTimer = null;
@@ -64,6 +66,10 @@ class HeishamonAdapter extends AdapterBase {
     // first complete reply, on the next outbound send, or when the window
     // elapses. See SET_PROBE_WINDOW_MS.
     setResponseProbe = null;
+    // Mirrors `NativeConfig.setProbeLogging`. When false the SET-response probe
+    // is never armed, so `logSetResponseProbe` stays a no-op and no hexdumps
+    // reach the log. Toggleable from the adapter settings.
+    setProbeLoggingEnabled = false;
     constructor(options = {}) {
         super({ ...options, name: 'heishamon' });
         this.on('ready', this.onReady.bind(this));
@@ -76,6 +82,7 @@ class HeishamonAdapter extends AdapterBase {
             return;
         }
         this.nativeConfig = cfg;
+        this.setProbeLoggingEnabled = cfg.setProbeLogging ?? false;
         await this.ensureObjectTree();
         this.subscribeStates('main.*');
         const logger = this.buildLogger();
@@ -114,8 +121,22 @@ class HeishamonAdapter extends AdapterBase {
         const gapMs = cfg.setCommandGapMs ?? DEFAULT_COMMAND_GAP_MS;
         this.wireQueue = new WireQueue({ minSendGapMs: gapMs });
         this.log.info(`wire queue: minSendGapMs=${gapMs}, capacity=${this.wireQueue.capacity()}`);
+        // The bus exchange owns the half-duplex request/response handshake: each
+        // send waits for the WP reply (fed via `handleFramerEvent`) and retries
+        // on timeout. It runs *inside* the wire queue so only one transaction is
+        // ever live and the configured inter-frame gap still applies.
+        const responseTimeoutMs = cfg.responseTimeoutMs ?? DEFAULT_RESPONSE_TIMEOUT_MS;
+        const maxRetries = cfg.sendMaxRetries ?? DEFAULT_MAX_RETRIES;
+        this.busExchange = new BusExchange({
+            send: (frame) => transport.send(frame),
+            responseTimeoutMs,
+            maxRetries,
+            log: logger,
+        });
+        this.log.info(`bus exchange: responseTimeoutMs=${responseTimeoutMs}, maxRetries=${maxRetries}`);
         if (!cfg.readOnlyMode) {
             const wireQueue = this.wireQueue;
+            const busExchange = this.busExchange;
             this.poller = new Poller({
                 pollIntervalMs: cfg.pollIntervalSec * 1000,
                 extraPollEnabled: cfg.extraPollEnabled,
@@ -127,20 +148,24 @@ class HeishamonAdapter extends AdapterBase {
                         // A new outbound frame ends any open set-probe window: a reply
                         // arriving after this point belongs to the poll, not the set.
                         this.setResponseProbe = null;
-                        return transport.send(frame);
+                        // The exchange drives the actual send and the response wait. Stats
+                        // bookkeeping moves into the per-call hooks so it reflects real
+                        // wire timing (one recordSent per send, one timeout per miss).
+                        return busExchange
+                            .runExchange(frame, 'poll', {
+                            onSend: () => {
+                                this.connectionStats.recordSent();
+                                this.scheduleStatsFlush();
+                            },
+                            onTimeout: () => {
+                                this.connectionStats.markPendingAsTimeout();
+                                this.scheduleStatsFlush();
+                            },
+                        })
+                            .then(() => undefined);
                     });
                 },
                 log: logger,
-                onBeforeSend: () => {
-                    // Any still-pending response from the previous tick missed its
-                    // window and counts as a timeout in the quality buffer. This
-                    // fires from inside the queue task, right before the actual
-                    // write hits the wire — so the bookkeeping reflects real
-                    // wire timing, not enqueue timing.
-                    this.connectionStats.markPendingAsTimeout();
-                    this.connectionStats.recordSent();
-                    this.scheduleStatsFlush();
-                },
             });
             this.poller.start();
         }
@@ -194,10 +219,18 @@ class HeishamonAdapter extends AdapterBase {
                 this.invalidRunActive = true;
                 this.connectionStats.recordReceived(false);
                 this.scheduleStatsFlush();
+                // A garbled frame on a multi-master bus may be a collision: arm the
+                // exchange's randomised backoff before the next bus access. It does
+                // NOT resolve the in-flight gate, so the attempt still times out and
+                // retries on a clean frame.
+                this.busExchange?.onCrcError();
             }
             return;
         }
         this.invalidRunActive = false;
+        // A valid frame completes the in-flight bus transaction. The same frame
+        // is also routed to the applier below — both must still happen.
+        this.busExchange?.onResponse();
         if (this.isResponseFrame(event.frameType)) {
             this.connectionStats.recordReceived(true);
             this.scheduleStatsFlush();
@@ -367,7 +400,8 @@ class HeishamonAdapter extends AdapterBase {
         }
         const transport = this.transport;
         const wireQueue = this.wireQueue;
-        if (transport === null || wireQueue === null) {
+        const busExchange = this.busExchange;
+        if (transport === null || wireQueue === null || busExchange === null) {
             this.log.error(`onStateChange: transport not ready, dropping set for ${topicName}`);
             return;
         }
@@ -375,24 +409,39 @@ class HeishamonAdapter extends AdapterBase {
         this.log.debug(`set enqueue ${topicName}=${numericValue}, pending=${wireQueue.pendingCount()}`);
         try {
             // Route through the shared queue so concurrent set-commands and the
-            // running poller can never collide on the wire.
-            await wireQueue.enqueue(async () => {
-                const waited = Date.now() - enqueuedAt;
-                this.log.debug(`set send ${topicName}=${numericValue}, waited ${waited} ms`);
-                await transport.send(frame);
-                // Arm the SET-response probe: the WP is expected to answer on the
-                // half-duplex bus, but its set-acknowledgement frame is not yet
-                // reverse-engineered. Log what we sent and watch the next inbound
-                // frame(s) so we can learn the reply's shape and timing.
-                this.setResponseProbe = {
-                    topic: topicName,
-                    value: numericValue,
-                    sentAt: Date.now(),
-                    seq: 0,
-                };
-                this.log.info(`set-probe armed ${topicName}=${numericValue}, sent ${frame.length}B ` +
-                    `[${this.toHexString(frame)}]`);
-            });
+            // running poller can never collide on the wire. The exchange owns the
+            // actual send and retries until the WP replies (or the budget runs out).
+            let probeArmed = false;
+            await wireQueue.enqueue(() => busExchange
+                .runExchange(frame, `set:${topicName}`, {
+                onSend: () => {
+                    // Run the first-send-only bookkeeping once; retries re-use it.
+                    if (probeArmed) {
+                        return;
+                    }
+                    probeArmed = true;
+                    const waited = Date.now() - enqueuedAt;
+                    this.log.debug(`set send ${topicName}=${numericValue}, waited ${waited} ms`);
+                    // Arm the SET-response probe only when diagnostic logging is
+                    // enabled in the adapter settings. The WP answers on the half-
+                    // duplex bus, but its set-acknowledgement frame is not yet
+                    // reverse-engineered; the probe logs the sent frame and the
+                    // next inbound frame(s) (type, timing, hexdump) to learn its
+                    // shape. Off by default to keep the log clean.
+                    if (!this.setProbeLoggingEnabled) {
+                        return;
+                    }
+                    this.setResponseProbe = {
+                        topic: topicName,
+                        value: numericValue,
+                        sentAt: Date.now(),
+                        seq: 0,
+                    };
+                    this.log.info(`set-probe armed ${topicName}=${numericValue}, sent ${frame.length}B ` +
+                        `[${this.toHexString(frame)}]`);
+                },
+            })
+                .then(() => undefined));
         }
         catch (error) {
             if (error instanceof WireQueueFullError) {
@@ -420,6 +469,7 @@ class HeishamonAdapter extends AdapterBase {
                 this.transport = null;
             }
             this.wireQueue = null;
+            this.busExchange = null;
             await this.setStateAsync('info.connection', { val: false, ack: true });
         }
         catch (error) {

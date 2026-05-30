@@ -15,12 +15,14 @@ declare class HeishamonAdapter extends AdapterBase {
     private applier;
     private nativeConfig;
     private wireQueue;
+    private busExchange;
     private readonly connectionStats;
     private lastStatsFlushAt;
     private statsFlushTimer;
     private lastWrittenSnapshot;
     private invalidRunActive;
     private setResponseProbe;
+    private setProbeLoggingEnabled;
     constructor(options?: Partial<utils.AdapterOptions>);
     private onReady;
     private validateConfig;

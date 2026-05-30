@@ -112,6 +112,24 @@
       "md": 8,
       "lg": 6,
       "xl": 4
+    },
+    "_diagnostics": {
+      "type": "header",
+      "size": 3,
+      "text": "Diagnostics",
+      "newLine": true
+    },
+    "setProbeLogging": {
+      "type": "checkbox",
+      "label": "Log set-command responses (reverse-engineering)",
+      "help": "Logs every set-command frame and the heat pump's reply (type, timing, hexdump) at info level. Useful for reverse-engineering the protocol. Off by default to keep the log clean.",
+      "default": false,
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 6,
+      "xl": 4
     }
   }
 }

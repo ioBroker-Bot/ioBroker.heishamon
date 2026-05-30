@@ -16,5 +16,8 @@
   "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).": "Verstuur geen polls of set-commando's. Decodeer en sla frames op die door een andere master op de bus worden verstuurd (bv. HeishaMon tijdens Fase-4 parallelbedrijf).",
   "Wire pacing": "Bus-timing",
   "Minimum gap between wire operations (ms)": "Minimale tussentijd tussen busbewerkingen (ms)",
-  "Wait time after each frame before the next one may be sent. Prevents collisions when multiple set-commands run in parallel. Default 200 ms — raise it for very old heat-pump generations if needed.": "Wachttijd na elk frame voordat het volgende mag worden verzonden. Voorkomt botsingen bij meerdere parallelle set-commando's. Standaard 200 ms — indien nodig verhogen voor zeer oude warmtepompgeneraties."
+  "Wait time after each frame before the next one may be sent. Prevents collisions when multiple set-commands run in parallel. Default 200 ms — raise it for very old heat-pump generations if needed.": "Wachttijd na elk frame voordat het volgende mag worden verzonden. Voorkomt botsingen bij meerdere parallelle set-commando's. Standaard 200 ms — indien nodig verhogen voor zeer oude warmtepompgeneraties.",
+  "Diagnostics": "Diagnostiek",
+  "Log set-command responses (reverse-engineering)": "Set-commando-antwoorden loggen (reverse-engineering)",
+  "Logs every set-command frame and the heat pump's reply (type, timing, hexdump) at info level. Useful for reverse-engineering the protocol. Off by default to keep the log clean.": "Logt elk set-commando-frame en het antwoord van de warmtepomp (type, timing, hexdump) op info-niveau. Handig voor reverse-engineering van het protocol. Standaard uit om het logboek schoon te houden."
 }

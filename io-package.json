@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "heishamon",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "news": {
+      "0.0.7": {
+        "en": "Response-driven half-duplex bus: each send now waits for the heat pump's reply (or a timeout) before the next frame goes out, and retries up to 3 times on timeout or CRC error. After a CRC error a randomised backoff precedes the next bus access to avoid lock-step collisions with a second master (Option-PCB). New 'Diagnostics' setting toggles the set-command response logging (off by default).",
+        "de": "Antwortgesteuerter Halbduplex-Bus: Jeder Send wartet jetzt auf die Antwort der Wärmepumpe (oder einen Timeout), bevor das nächste Frame rausgeht, und wiederholt bei Timeout oder CRC-Fehler bis zu 3-mal. Nach einem CRC-Fehler wird vor dem nächsten Buszugriff eine zufällige Wartezeit eingefügt, um Lockstep-Kollisionen mit einem zweiten Master (Option-PCB) zu vermeiden. Neue Einstellung 'Diagnose' schaltet das Set-Command-Antwort-Logging (standardmäßig aus).",
+        "ru": "Шина с подтверждением (полудуплекс): каждая отправка теперь ждёт ответа теплового насоса (или тайм-аут) перед следующим кадром и повторяет до 3 раз при тайм-ауте или ошибке CRC. После ошибки CRC перед следующим доступом к шине вставляется случайная задержка, чтобы избежать синхронных коллизий со вторым мастером (Option-PCB). Новая настройка 'Диагностика' включает логирование ответов на set-команды (по умолчанию выключено).",
+        "pt": "Barramento half-duplex orientado a respostas: cada envio aguarda agora a resposta da bomba de calor (ou um timeout) antes do frame seguinte, e repete até 3 vezes em timeout ou erro de CRC. Após um erro de CRC, um atraso aleatório precede o próximo acesso ao barramento para evitar colisões em lock-step com um segundo mestre (Option-PCB). A nova definição 'Diagnóstico' ativa o registo das respostas a comandos set (desligado por padrão).",
+        "nl": "Antwoordgestuurde half-duplexbus: elke verzending wacht nu op het antwoord van de warmtepomp (of een time-out) voordat het volgende frame wordt verzonden, en probeert het bij een time-out of CRC-fout tot 3 keer opnieuw. Na een CRC-fout gaat een willekeurige wachttijd vooraf aan de volgende bustoegang om lock-stepbotsingen met een tweede master (Option-PCB) te voorkomen. Nieuwe instelling 'Diagnostiek' schakelt het loggen van set-commando-antwoorden in (standaard uit).",
+        "fr": "Bus semi-duplex piloté par les réponses : chaque envoi attend désormais la réponse de la pompe à chaleur (ou un délai dépassé) avant la trame suivante, et réessaie jusqu'à 3 fois en cas de délai dépassé ou d'erreur CRC. Après une erreur CRC, un délai aléatoire précède le prochain accès au bus pour éviter les collisions synchrones avec un second maître (Option-PCB). Le nouveau réglage 'Diagnostic' active la journalisation des réponses aux commandes set (désactivé par défaut).",
+        "it": "Bus half-duplex guidato dalle risposte: ogni invio attende ora la risposta della pompa di calore (o un timeout) prima del frame successivo, e riprova fino a 3 volte in caso di timeout o errore CRC. Dopo un errore CRC un ritardo casuale precede il successivo accesso al bus per evitare collisioni in lock-step con un secondo master (Option-PCB). La nuova impostazione 'Diagnostica' attiva il logging delle risposte ai comandi set (disattivato per impostazione predefinita).",
+        "es": "Bus semidúplex orientado a respuestas: cada envío espera ahora la respuesta de la bomba de calor (o un tiempo de espera) antes del siguiente fotograma, y reintenta hasta 3 veces en caso de tiempo de espera o error CRC. Tras un error CRC se inserta un retardo aleatorio antes del siguiente acceso al bus para evitar colisiones sincronizadas con un segundo maestro (Option-PCB). El nuevo ajuste 'Diagnóstico' activa el registro de las respuestas a comandos set (desactivado por defecto).",
+        "pl": "Magistrala półdupleksowa sterowana odpowiedziami: każda wysyłka czeka teraz na odpowiedź pompy ciepła (lub timeout) przed następną ramką i ponawia próbę do 3 razy przy timeoucie lub błędzie CRC. Po błędzie CRC przed kolejnym dostępem do magistrali wstawiane jest losowe opóźnienie, aby uniknąć zsynchronizowanych kolizji z drugim masterem (Option-PCB). Nowe ustawienie 'Diagnostyka' włącza logowanie odpowiedzi na polecenia set (domyślnie wyłączone).",
+        "uk": "Шина з підтвердженням (напівдуплекс): кожна відправка тепер чекає на відповідь теплового насоса (або тайм-аут) перед наступним кадром і повторює до 3 разів за тайм-ауту чи помилки CRC. Після помилки CRC перед наступним доступом до шини додається випадкова затримка, щоб уникнути синхронних колізій із другим майстром (Option-PCB). Нове налаштування 'Діагностика' вмикає логування відповідей на set-команди (вимкнено за замовчуванням).",
+        "zh-cn": "响应驱动的半双工总线：每次发送现在都会先等待热泵的回复（或超时）再发出下一帧，并在超时或 CRC 错误时最多重试 3 次。CRC 错误后会在下次访问总线前插入随机退避，以避免与第二个主机（Option-PCB）发生锁步冲突。新增“诊断”设置可开关 set 命令响应日志（默认关闭）。"
+      },
       "0.0.6": {
         "en": "Diagnostic logging to reverse-engineer the heat pump's SET acknowledgement. After each set command the adapter logs the sent frame and the heat pump's reply (frame type, timing, hexdump) at info level. Read-only — wire timing is unchanged.",
         "de": "Diagnose-Logging zum Reverse-Engineering der SET-Quittung der Wärmepumpe. Nach jedem Set-Command loggt der Adapter das gesendete Frame und die Antwort der WP (Frame-Typ, Timing, Hexdump) auf Info-Level. Read-only — das Wire-Timing bleibt unverändert.",
@@ -147,7 +160,8 @@
     "extraPollEnabled": true,
     "optionalPcbPollEnabled": false,
     "readOnlyMode": false,
-    "setCommandGapMs": 200
+    "setCommandGapMs": 200,
+    "setProbeLogging": false
   },
   "objects": [],
   "instanceObjects": [
