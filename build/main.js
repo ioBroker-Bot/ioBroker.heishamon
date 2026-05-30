@@ -23,6 +23,15 @@ import { WireQueue, WireQueueFullError } from './wire-queue.js';
  */
 const STATS_FLUSH_THROTTLE_MS = 1000;
 /**
+ * How long after a `mainSet` hits the wire we keep logging inbound frames
+ * as candidate set-acknowledgements. Diagnostic instrumentation only: the
+ * Panasonic SET response has not been reverse-engineered yet, so we capture
+ * the WP's reply (type, timing, hexdump) to learn what it looks like. The
+ * window is generous (well past the original firmware's 2 s read timeout)
+ * so a slow reply is never missed. See [[session-checkpoints]].
+ */
+const SET_PROBE_WINDOW_MS = 3000;
+/**
  * Default minimum gap between two wire operations. Chosen to comfortably
  * exceed a single poll round-trip on a healthy bus while still feeling
  * snappy for interactive set-commands.
@@ -48,6 +57,13 @@ class HeishamonAdapter extends AdapterBase {
     // garbled 203-byte response yields many `invalid/checksum` events. We
     // collapse runs of them into a single CRC-fail frame for stats.
     invalidRunActive = false;
+    // Active SET-response probe. Armed the moment a `mainSet` is written to
+    // the wire; the next inbound framer events are logged with timing and a
+    // hexdump so the Panasonic SET acknowledgement can be reverse-engineered.
+    // Read-only diagnostics — never alters wire behaviour. Disarmed on the
+    // first complete reply, on the next outbound send, or when the window
+    // elapses. See SET_PROBE_WINDOW_MS.
+    setResponseProbe = null;
     constructor(options = {}) {
         super({ ...options, name: 'heishamon' });
         this.on('ready', this.onReady.bind(this));
@@ -108,6 +124,9 @@ class HeishamonAdapter extends AdapterBase {
                     this.log.debug(`poll enqueue ${frame.length}B, pending=${wireQueue.pendingCount()}`);
                     return wireQueue.enqueue(() => {
                         this.log.debug(`poll send ${frame.length}B`);
+                        // A new outbound frame ends any open set-probe window: a reply
+                        // arriving after this point belongs to the poll, not the set.
+                        this.setResponseProbe = null;
                         return transport.send(frame);
                     });
                 },
@@ -165,11 +184,9 @@ class HeishamonAdapter extends AdapterBase {
         };
     }
     handleFramerEvent(event) {
+        this.logSetResponseProbe(event);
         if (event.kind === 'invalid') {
-            const hex = Array.from(event.bytes)
-                .map((b) => b.toString(16).padStart(2, '0'))
-                .join(' ');
-            this.log.debug(`framer: invalid (${event.reason}, bytes=${hex})`);
+            this.log.debug(`framer: invalid (${event.reason}, bytes=${this.toHexString(event.bytes)})`);
             // A failed-checksum candidate counts as one CRC-fail frame, but the
             // framer can emit many `invalid` events in a row while resynchronising
             // after a bad frame. Collapse the run so we only book one frame.
@@ -209,6 +226,48 @@ class HeishamonAdapter extends AdapterBase {
     }
     isResponseFrame(frameType) {
         return frameType === 'mainResponse' || frameType === 'extraResponse';
+    }
+    /**
+     * Diagnostic logging for the (not-yet-reverse-engineered) Panasonic SET
+     * acknowledgement. When a probe is armed (a `mainSet` was just written),
+     * log every inbound framer event with its delay since the send, frame
+     * type/length and a full hexdump. The first *complete* frame is taken to
+     * be the reply and disarms the probe; CRC-garbage that precedes it is
+     * logged but does not disarm, so a corrupted reply still shows up. The
+     * probe also self-clears once SET_PROBE_WINDOW_MS has elapsed.
+     *
+     * This never touches wire behaviour — it only observes. Once we know what
+     * the reply looks like, this feeds the response-driven queue + retry work.
+     */
+    logSetResponseProbe(event) {
+        const probe = this.setResponseProbe;
+        if (probe === null) {
+            return;
+        }
+        const dt = Date.now() - probe.sentAt;
+        if (dt > SET_PROBE_WINDOW_MS) {
+            this.log.info(`set-probe ${probe.topic}=${probe.value}: no reply within ${SET_PROBE_WINDOW_MS} ms`);
+            this.setResponseProbe = null;
+            return;
+        }
+        probe.seq += 1;
+        if (event.kind === 'frame') {
+            this.log.info(`set-probe ${probe.topic}=${probe.value}: reply #${probe.seq} +${dt}ms ` +
+                `type=${event.frameType} len=${event.frame.length} [${this.toHexString(event.frame)}]`);
+            // First complete, header-recognised frame after the send: treat it as
+            // the acknowledgement and stop probing this set.
+            this.setResponseProbe = null;
+        }
+        else {
+            this.log.info(`set-probe ${probe.topic}=${probe.value}: reply #${probe.seq} +${dt}ms ` +
+                `INVALID(${event.reason}) [${this.toHexString(event.bytes)}]`);
+        }
+    }
+    /** Space-separated lower-case hexdump of a byte buffer, for diagnostics. */
+    toHexString(bytes) {
+        return Array.from(bytes)
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join(' ');
     }
     /**
      * Throttled flush of the connection-stats snapshot to ioBroker. Writes
@@ -317,10 +376,22 @@ class HeishamonAdapter extends AdapterBase {
         try {
             // Route through the shared queue so concurrent set-commands and the
             // running poller can never collide on the wire.
-            await wireQueue.enqueue(() => {
+            await wireQueue.enqueue(async () => {
                 const waited = Date.now() - enqueuedAt;
                 this.log.debug(`set send ${topicName}=${numericValue}, waited ${waited} ms`);
-                return transport.send(frame);
+                await transport.send(frame);
+                // Arm the SET-response probe: the WP is expected to answer on the
+                // half-duplex bus, but its set-acknowledgement frame is not yet
+                // reverse-engineered. Log what we sent and watch the next inbound
+                // frame(s) so we can learn the reply's shape and timing.
+                this.setResponseProbe = {
+                    topic: topicName,
+                    value: numericValue,
+                    sentAt: Date.now(),
+                    seq: 0,
+                };
+                this.log.info(`set-probe armed ${topicName}=${numericValue}, sent ${frame.length}B ` +
+                    `[${this.toHexString(frame)}]`);
             });
         }
         catch (error) {

@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "heishamon",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "news": {
+      "0.0.6": {
+        "en": "Diagnostic logging to reverse-engineer the heat pump's SET acknowledgement. After each set command the adapter logs the sent frame and the heat pump's reply (frame type, timing, hexdump) at info level. Read-only — wire timing is unchanged.",
+        "de": "Diagnose-Logging zum Reverse-Engineering der SET-Quittung der Wärmepumpe. Nach jedem Set-Command loggt der Adapter das gesendete Frame und die Antwort der WP (Frame-Typ, Timing, Hexdump) auf Info-Level. Read-only — das Wire-Timing bleibt unverändert.",
+        "ru": "Диагностический лог для реверс-инжиниринга подтверждения SET от теплового насоса. После каждой set-команды логируется отправленный кадр и ответ ТН (тип кадра, тайминг, hexdump) на уровне info. Только чтение — тайминг шины не меняется.",
+        "pt": "Log de diagnóstico para fazer engenharia reversa da confirmação de SET da bomba de calor. Após cada comando set, o adaptador regista o frame enviado e a resposta da bomba (tipo de frame, timing, hexdump) em nível info. Apenas leitura — o timing do barramento não muda.",
+        "nl": "Diagnostische logs om de SET-bevestiging van de warmtepomp te reverse-engineeren. Na elk set-commando logt de adapter het verzonden frame en het antwoord van de WP (frametype, timing, hexdump) op info-niveau. Alleen-lezen — de bustiming verandert niet.",
+        "fr": "Journaux de diagnostic pour rétro-concevoir l'accusé de réception SET de la pompe à chaleur. Après chaque commande set, l'adaptateur journalise la trame envoyée et la réponse de la PAC (type de trame, timing, hexdump) au niveau info. Lecture seule — le timing du bus est inchangé.",
+        "it": "Log diagnostici per il reverse-engineering della conferma SET della pompa di calore. Dopo ogni comando set, l'adattatore registra il frame inviato e la risposta della PdC (tipo frame, timing, hexdump) a livello info. Sola lettura — il timing del bus è invariato.",
+        "es": "Logs de diagnóstico para hacer ingeniería inversa de la confirmación SET de la bomba de calor. Tras cada comando set, el adaptador registra la trama enviada y la respuesta de la bomba (tipo de trama, timing, hexdump) en nivel info. Solo lectura — el timing del bus no cambia.",
+        "pl": "Diagnostyczne logi do inżynierii wstecznej potwierdzenia SET pompy ciepła. Po każdym poleceniu set adapter loguje wysłaną ramkę i odpowiedź pompy (typ ramki, timing, hexdump) na poziomie info. Tylko odczyt — timing magistrali bez zmian.",
+        "uk": "Діагностичні логи для реверс-інжинірингу підтвердження SET теплового насоса. Після кожної set-команди адаптер логує надісланий кадр і відповідь ТН (тип кадру, тайминг, hexdump) на рівні info. Лише читання — тайминг шини незмінний.",
+        "zh-cn": "用于逆向工程热泵 SET 确认帧的诊断日志。每次 set 命令后，适配器在 info 级别记录发送的帧以及热泵的回复（帧类型、时序、十六进制转储）。只读——总线时序不变。"
+      },
       "0.0.5": {
         "en": "Wire-queue gap is now enforced between every pair of sends, including across idle periods (the previous design only inserted the gap while several tasks were stacked up in the queue). Queue is hard-capped at 100 pending entries to prevent memory growth; overflows are logged and the dropped send is skipped.",
         "de": "Der Mindestabstand der Wire-Queue gilt jetzt zwischen jedem Sende-Paar, auch über Leerläufe hinweg (vorher griff der Abstand nur, solange mehrere Tasks gestapelt in der Queue lagen). Queue ist hart auf 100 Einträge begrenzt, Überlauf wird geloggt und die Sendung verworfen.",

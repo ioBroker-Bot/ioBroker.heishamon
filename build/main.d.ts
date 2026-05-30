@@ -20,6 +20,7 @@ declare class HeishamonAdapter extends AdapterBase {
     private statsFlushTimer;
     private lastWrittenSnapshot;
     private invalidRunActive;
+    private setResponseProbe;
     constructor(options?: Partial<utils.AdapterOptions>);
     private onReady;
     private validateConfig;
@@ -27,6 +28,21 @@ declare class HeishamonAdapter extends AdapterBase {
     private buildLogger;
     private handleFramerEvent;
     private isResponseFrame;
+    /**
+     * Diagnostic logging for the (not-yet-reverse-engineered) Panasonic SET
+     * acknowledgement. When a probe is armed (a `mainSet` was just written),
+     * log every inbound framer event with its delay since the send, frame
+     * type/length and a full hexdump. The first *complete* frame is taken to
+     * be the reply and disarms the probe; CRC-garbage that precedes it is
+     * logged but does not disarm, so a corrupted reply still shows up. The
+     * probe also self-clears once SET_PROBE_WINDOW_MS has elapsed.
+     *
+     * This never touches wire behaviour — it only observes. Once we know what
+     * the reply looks like, this feeds the response-driven queue + retry work.
+     */
+    private logSetResponseProbe;
+    /** Space-separated lower-case hexdump of a byte buffer, for diagnostics. */
+    private toHexString;
     /**
      * Throttled flush of the connection-stats snapshot to ioBroker. Writes
      * immediately when the last flush is older than `STATS_FLUSH_THROTTLE_MS`,

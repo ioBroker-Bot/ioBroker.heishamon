@@ -1,6 +1,6 @@
 {
   "name": "iobroker.heishamon",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "ioBroker adapter for Panasonic Aquarea heat pumps. Talks the CN-CNT protocol directly over a serial line (RS232 levels at the heat pump; optional RS232/RS485 converter for long cable runs) — no HeishaMon/MQTT hop required.",
   "author": "Tobias Hanss <tobias.hanss@atcetera.de>",
   "license": "MIT",
