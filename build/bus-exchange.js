@@ -30,9 +30,6 @@ export const DEFAULT_RESPONSE_TIMEOUT_MS = 1000;
 export const DEFAULT_MAX_RETRIES = 3;
 export const DEFAULT_CRC_BACKOFF_MIN_MS = 50;
 export const DEFAULT_CRC_BACKOFF_MAX_MS = 300;
-const defaultSleep = (ms) => new Promise((resolve) => {
-    setTimeout(resolve, ms);
-});
 const defaultRandom = () => Math.random();
 export class BusExchange {
     send;
@@ -76,7 +73,7 @@ export class BusExchange {
         this.maxRetries = maxRetries;
         this.crcBackoffMinMs = crcBackoffMinMs;
         this.crcBackoffMaxMs = crcBackoffMaxMs;
-        this.sleep = options.sleep ?? defaultSleep;
+        this.sleep = options.sleep;
         this.random = options.random ?? defaultRandom;
         this.log = options.log;
     }

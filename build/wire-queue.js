@@ -19,9 +19,6 @@
  * the last send runs without waiting; one that arrives shortly after waits
  * just long enough to honour the configured gap.
  */
-const defaultSleep = (ms) => new Promise((resolve) => {
-    setTimeout(resolve, ms);
-});
 const defaultNow = () => Date.now();
 const DEFAULT_MAX_QUEUE_SIZE = 100;
 export class WireQueueFullError extends Error {
@@ -52,7 +49,7 @@ export class WireQueue {
         }
         this.minSendGapMs = options.minSendGapMs;
         this.maxQueueSize = maxSize;
-        this.sleep = options.sleep ?? defaultSleep;
+        this.sleep = options.sleep;
         this.now = options.now ?? defaultNow;
     }
     /**

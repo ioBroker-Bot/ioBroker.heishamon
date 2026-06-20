@@ -32,8 +32,11 @@ export interface WireQueueOptions {
    * Defaults to 100, which is far above any healthy steady-state load.
    */
   readonly maxQueueSize?: number;
-  /** Test seam — defaults to setTimeout-based sleep. */
-  readonly sleep?: SleepFn;
+  /**
+   * Required seam — an adapter-managed sleep. `main.ts` supplies the ioBroker
+   * base-class `this.delay(ms)`; tests inject a deterministic fake.
+   */
+  readonly sleep: SleepFn;
   /** Test seam — defaults to Date.now. */
   readonly now?: NowFn;
 }
@@ -43,11 +46,6 @@ interface QueueEntry {
   readonly resolve: () => void;
   readonly reject: (error: unknown) => void;
 }
-
-const defaultSleep: SleepFn = (ms) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 
 const defaultNow: NowFn = () => Date.now();
 
@@ -83,7 +81,7 @@ export class WireQueue {
     }
     this.minSendGapMs = options.minSendGapMs;
     this.maxQueueSize = maxSize;
-    this.sleep = options.sleep ?? defaultSleep;
+    this.sleep = options.sleep;
     this.now = options.now ?? defaultNow;
   }
 

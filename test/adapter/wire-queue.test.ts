@@ -31,6 +31,9 @@ function createClock(): {
   return { sleep, now, gaps, advance };
 }
 
+/** No-op sleep for tests that only exercise construction/validation. */
+const noopSleep: SleepFn = () => Promise.resolve();
+
 describe('WireQueue', () => {
   it('runs a single enqueued task and resolves the returned promise', async () => {
     const { sleep, now, gaps } = createClock();
@@ -242,8 +245,9 @@ describe('WireQueue', () => {
     ).rejects.toBe(sentinel);
   });
 
-  it('uses the default sleep and now when no overrides are provided (smoke test)', async () => {
-    const queue = new WireQueue({ minSendGapMs: 1 });
+  it('uses the injected sleep and default now (smoke test)', async () => {
+    const { sleep } = createClock();
+    const queue = new WireQueue({ minSendGapMs: 1, sleep });
 
     const order: number[] = [];
     await Promise.all([
@@ -259,12 +263,14 @@ describe('WireQueue', () => {
   });
 
   it('throws synchronously when minSendGapMs is negative', () => {
-    expect(() => new WireQueue({ minSendGapMs: -1 })).toThrow();
+    expect(() => new WireQueue({ minSendGapMs: -1, sleep: noopSleep })).toThrow();
   });
 
   it('throws when minSendGapMs is not finite', () => {
-    expect(() => new WireQueue({ minSendGapMs: Number.NaN })).toThrow();
-    expect(() => new WireQueue({ minSendGapMs: Number.POSITIVE_INFINITY })).toThrow();
+    expect(() => new WireQueue({ minSendGapMs: Number.NaN, sleep: noopSleep })).toThrow();
+    expect(
+      () => new WireQueue({ minSendGapMs: Number.POSITIVE_INFINITY, sleep: noopSleep }),
+    ).toThrow();
   });
 
   it('preserves FIFO order across a many-task burst', async () => {
@@ -367,19 +373,21 @@ describe('WireQueue', () => {
     });
 
     it('exposes the configured capacity via capacity()', () => {
-      const queue = new WireQueue({ minSendGapMs: 0, maxQueueSize: 42 });
+      const queue = new WireQueue({ minSendGapMs: 0, maxQueueSize: 42, sleep: noopSleep });
       expect(queue.capacity()).toBe(42);
     });
 
     it('defaults capacity to 100 when not explicitly set', () => {
-      const queue = new WireQueue({ minSendGapMs: 0 });
+      const queue = new WireQueue({ minSendGapMs: 0, sleep: noopSleep });
       expect(queue.capacity()).toBe(100);
     });
 
     it('throws synchronously for invalid maxQueueSize', () => {
-      expect(() => new WireQueue({ minSendGapMs: 0, maxQueueSize: 0 })).toThrow();
-      expect(() => new WireQueue({ minSendGapMs: 0, maxQueueSize: -1 })).toThrow();
-      expect(() => new WireQueue({ minSendGapMs: 0, maxQueueSize: 1.5 })).toThrow();
+      expect(() => new WireQueue({ minSendGapMs: 0, maxQueueSize: 0, sleep: noopSleep })).toThrow();
+      expect(() => new WireQueue({ minSendGapMs: 0, maxQueueSize: -1, sleep: noopSleep })).toThrow();
+      expect(
+        () => new WireQueue({ minSendGapMs: 0, maxQueueSize: 1.5, sleep: noopSleep }),
+      ).toThrow();
     });
   });
 });

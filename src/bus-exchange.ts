@@ -81,8 +81,11 @@ export interface BusExchangeOptions {
    * {@link DEFAULT_CRC_BACKOFF_MAX_MS}.
    */
   readonly crcBackoffMaxMs?: number;
-  /** Test seam — defaults to setTimeout-based sleep. */
-  readonly sleep?: SleepFn;
+  /**
+   * Required seam — an adapter-managed sleep. `main.ts` supplies the ioBroker
+   * base-class `this.delay(ms)`; tests inject a deterministic fake.
+   */
+  readonly sleep: SleepFn;
   /**
    * Test seam — defaults to Date.now. Accepted for parity with the other
    * pure modules; the response/timeout race is driven purely by `sleep`, so
@@ -99,11 +102,6 @@ export const DEFAULT_RESPONSE_TIMEOUT_MS = 1000;
 export const DEFAULT_MAX_RETRIES = 3;
 export const DEFAULT_CRC_BACKOFF_MIN_MS = 50;
 export const DEFAULT_CRC_BACKOFF_MAX_MS = 300;
-
-const defaultSleep: SleepFn = (ms) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 
 const defaultRandom: RandomFn = () => Math.random();
 
@@ -166,7 +164,7 @@ export class BusExchange {
     this.maxRetries = maxRetries;
     this.crcBackoffMinMs = crcBackoffMinMs;
     this.crcBackoffMaxMs = crcBackoffMaxMs;
-    this.sleep = options.sleep ?? defaultSleep;
+    this.sleep = options.sleep;
     this.random = options.random ?? defaultRandom;
     this.log = options.log;
   }

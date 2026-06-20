@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "heishamon",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "news": {
+      "0.0.8": {
+        "en": "Maintenance release for ioBroker repository acceptance: timers are now managed by the adapter base class for clean shutdown, Node.js >=22 is required, and the CI runs the adapter tests on Linux, Windows and macOS. No functional change to the heat-pump communication.",
+        "de": "Wartungs-Release für die ioBroker-Repo-Aufnahme: Timer werden jetzt von der Adapter-Basisklasse verwaltet (sauberes Beenden), Node.js >=22 wird vorausgesetzt, und die CI führt die Adapter-Tests unter Linux, Windows und macOS aus. Keine funktionale Änderung an der WP-Kommunikation.",
+        "ru": "Сервисный релиз для приёма в репозиторий ioBroker: таймеры теперь управляются базовым классом адаптера (чистое завершение), требуется Node.js >=22, CI запускает тесты адаптера на Linux, Windows и macOS. Функциональность связи с тепловым насосом не изменена.",
+        "pt": "Versão de manutenção para aceitação no repositório ioBroker: os temporizadores são agora geridos pela classe base do adaptador (encerramento limpo), é necessário Node.js >=22 e a CI executa os testes do adaptador em Linux, Windows e macOS. Sem alteração funcional na comunicação com a bomba de calor.",
+        "nl": "Onderhoudsrelease voor opname in de ioBroker-repository: timers worden nu beheerd door de adapter-basisklasse (nette afsluiting), Node.js >=22 is vereist en de CI draait de adaptertests op Linux, Windows en macOS. Geen functionele wijziging in de communicatie met de warmtepomp.",
+        "fr": "Version de maintenance pour l'acceptation dans le dépôt ioBroker : les minuteries sont désormais gérées par la classe de base de l'adaptateur (arrêt propre), Node.js >=22 est requis, et la CI exécute les tests de l'adaptateur sous Linux, Windows et macOS. Aucun changement fonctionnel de la communication avec la pompe à chaleur.",
+        "it": "Versione di manutenzione per l'accettazione nel repository ioBroker: i timer sono ora gestiti dalla classe base dell'adattatore (arresto pulito), è richiesto Node.js >=22 e la CI esegue i test dell'adattatore su Linux, Windows e macOS. Nessuna modifica funzionale alla comunicazione con la pompa di calore.",
+        "es": "Versión de mantenimiento para la aceptación en el repositorio ioBroker: los temporizadores ahora los gestiona la clase base del adaptador (cierre limpio), se requiere Node.js >=22 y la CI ejecuta las pruebas del adaptador en Linux, Windows y macOS. Sin cambios funcionales en la comunicación con la bomba de calor.",
+        "pl": "Wydanie konserwacyjne na potrzeby przyjęcia do repozytorium ioBroker: timery są teraz zarządzane przez klasę bazową adaptera (czyste zamykanie), wymagany jest Node.js >=22, a CI uruchamia testy adaptera na Linux, Windows i macOS. Bez zmian funkcjonalnych w komunikacji z pompą ciepła.",
+        "uk": "Сервісний реліз для прийняття до репозиторію ioBroker: таймери тепер керуються базовим класом адаптера (чисте завершення), потрібен Node.js >=22, а CI виконує тести адаптера на Linux, Windows і macOS. Функціональність зв'язку з тепловим насосом не змінено.",
+        "zh-cn": "为通过 ioBroker 仓库收录的维护版本：计时器现在由适配器基类管理（干净关闭），要求 Node.js >=22，CI 在 Linux、Windows 和 macOS 上运行适配器测试。热泵通信功能无变化。"
+      },
       "0.0.7": {
         "en": "Response-driven half-duplex bus: each send now waits for the heat pump's reply (or a timeout) before the next frame goes out, and retries up to 3 times on timeout or CRC error. After a CRC error a randomised backoff precedes the next bus access to avoid lock-step collisions with a second master (Option-PCB). New 'Diagnostics' setting toggles the set-command response logging (off by default).",
         "de": "Antwortgesteuerter Halbduplex-Bus: Jeder Send wartet jetzt auf die Antwort der Wärmepumpe (oder einen Timeout), bevor das nächste Frame rausgeht, und wiederholt bei Timeout oder CRC-Fehler bis zu 3-mal. Nach einem CRC-Fehler wird vor dem nächsten Buszugriff eine zufällige Wartezeit eingefügt, um Lockstep-Kollisionen mit einem zweiten Master (Option-PCB) zu vermeiden. Neue Einstellung 'Diagnose' schaltet das Set-Command-Antwort-Logging (standardmäßig aus).",
@@ -41,19 +54,6 @@
         "pl": "Minimalna przerwa jest teraz egzekwowana między każdą parą wysyłek, także w okresach bezczynności. Kolejka ograniczona do 100 wpisów; przepełnienie jest logowane, a wysyłka pomijana.",
         "uk": "Мінімальний інтервал тепер дотримується між кожною парою відправок, у тому числі під час простоїв. Черга обмежена 100 записами; переповнення логується, відправлення відкидається.",
         "zh-cn": "线路队列间隔现在在每两次发送之间生效，即使队列在中间清空过（之前只有在多个任务堆积时才生效）。队列硬上限 100 条，溢出将被记录并丢弃。"
-      },
-      "0.0.4": {
-        "en": "Diagnostic logging for the wire queue. Logs the effective minSendGapMs at startup and emits debug entries for every poll and set enqueue/send including wait time and pending queue size.",
-        "de": "Diagnose-Logging für die Wire-Queue. Loggt den effektiven minSendGapMs beim Start und schreibt Debug-Einträge für jedes Poll- und Set-Enqueue/Send inkl. Wartezeit und Pending-Queue-Größe.",
-        "ru": "Диагностический лог очереди записи: фиксирует minSendGapMs при старте и debug-записи для каждой постановки/отправки.",
-        "pt": "Log de diagnóstico para a fila serial: registra minSendGapMs no início e entradas debug para cada enfileiramento/envio.",
-        "nl": "Diagnostische logs voor de wire-queue: logt minSendGapMs bij start en debug-regels per enqueue/send.",
-        "fr": "Journaux de diagnostic pour la file série : enregistre minSendGapMs au démarrage et chaque mise en file/envoi en debug.",
-        "it": "Log diagnostici per la coda seriale: registra minSendGapMs all'avvio e ogni enqueue/send in debug.",
-        "es": "Logs de diagnóstico para la cola serie: registra minSendGapMs al arrancar y cada enqueue/send en debug.",
-        "pl": "Diagnostyczne logi kolejki: zapisuje minSendGapMs przy starcie i każde enqueue/send w trybie debug.",
-        "uk": "Діагностичні логи черги: фіксує minSendGapMs при старті і кожне enqueue/send у debug.",
-        "zh-cn": "线路队列诊断日志：启动时记录有效的 minSendGapMs，并为每次 poll/set 入队和发送输出 debug 记录（含等待时间和队列长度）。"
       },
       "0.0.3": {
         "en": "Serialize all wire writes through a single FIFO queue with a configurable inter-frame gap (default 200 ms). Fixes lost set commands when a script writes several datapoints at once. Pump_Duty / Max_Pump_Duty unit removed (raw 65-254 value, no physical unit).",

@@ -56,6 +56,9 @@ function fixedRandom(value: number): RandomFn {
   return () => value;
 }
 
+/** No-op sleep for tests that never drive the timeout/backoff race. */
+const noopSleep: SleepFn = () => Promise.resolve();
+
 /** Flush all currently-queued microtasks so awaited continuations run. */
 async function flush(): Promise<void> {
   for (let i = 0; i < 5; i += 1) {
@@ -66,28 +69,30 @@ async function flush(): Promise<void> {
 describe('BusExchange — construction & validation', () => {
   it('throws when send is not a function', () => {
     // @ts-expect-error intentional bad input
-    expect(() => new BusExchange({ send: undefined })).toThrow();
+    expect(() => new BusExchange({ send: undefined, sleep: noopSleep })).toThrow();
   });
 
   it('throws on a non-positive responseTimeoutMs', () => {
     const send = async (): Promise<void> => {};
-    expect(() => new BusExchange({ send, responseTimeoutMs: 0 })).toThrow();
-    expect(() => new BusExchange({ send, responseTimeoutMs: -5 })).toThrow();
-    expect(() => new BusExchange({ send, responseTimeoutMs: Number.NaN })).toThrow();
+    expect(() => new BusExchange({ send, responseTimeoutMs: 0, sleep: noopSleep })).toThrow();
+    expect(() => new BusExchange({ send, responseTimeoutMs: -5, sleep: noopSleep })).toThrow();
+    expect(
+      () => new BusExchange({ send, responseTimeoutMs: Number.NaN, sleep: noopSleep }),
+    ).toThrow();
   });
 
   it('throws on a bad maxRetries', () => {
     const send = async (): Promise<void> => {};
-    expect(() => new BusExchange({ send, maxRetries: -1 })).toThrow();
-    expect(() => new BusExchange({ send, maxRetries: 1.5 })).toThrow();
-    expect(() => new BusExchange({ send, maxRetries: Number.NaN })).toThrow();
+    expect(() => new BusExchange({ send, maxRetries: -1, sleep: noopSleep })).toThrow();
+    expect(() => new BusExchange({ send, maxRetries: 1.5, sleep: noopSleep })).toThrow();
+    expect(() => new BusExchange({ send, maxRetries: Number.NaN, sleep: noopSleep })).toThrow();
   });
 
   it('throws on negative or inverted CRC backoff bounds', () => {
     const send = async (): Promise<void> => {};
-    expect(() => new BusExchange({ send, crcBackoffMinMs: -1 })).toThrow();
+    expect(() => new BusExchange({ send, crcBackoffMinMs: -1, sleep: noopSleep })).toThrow();
     expect(
-      () => new BusExchange({ send, crcBackoffMinMs: 200, crcBackoffMaxMs: 100 }),
+      () => new BusExchange({ send, crcBackoffMinMs: 200, crcBackoffMaxMs: 100, sleep: noopSleep }),
     ).toThrow();
   });
 
@@ -95,7 +100,7 @@ describe('BusExchange — construction & validation', () => {
     expect(DEFAULT_RESPONSE_TIMEOUT_MS).toBe(1000);
     expect(DEFAULT_MAX_RETRIES).toBe(3);
     const send = async (): Promise<void> => {};
-    expect(() => new BusExchange({ send })).not.toThrow();
+    expect(() => new BusExchange({ send, sleep: noopSleep })).not.toThrow();
   });
 });
 
@@ -258,12 +263,12 @@ describe('BusExchange — runExchange', () => {
   });
 
   it('treats onResponse() with no open gate as a no-op', () => {
-    const exchange = new BusExchange({ send: async (): Promise<void> => {} });
+    const exchange = new BusExchange({ send: async (): Promise<void> => {}, sleep: noopSleep });
     expect(() => exchange.onResponse()).not.toThrow();
   });
 
   it('treats onCrcError() with no exchange in flight as a no-op', () => {
-    const exchange = new BusExchange({ send: async (): Promise<void> => {} });
+    const exchange = new BusExchange({ send: async (): Promise<void> => {}, sleep: noopSleep });
     expect(() => exchange.onCrcError()).not.toThrow();
   });
 
@@ -344,6 +349,7 @@ describe('BusExchange — runExchange', () => {
       send: async () => {
         throw new Error('write failed');
       },
+      sleep: noopSleep,
     });
     await expect(exchange.runExchange(frame, 'poll')).rejects.toThrow('write failed');
   });

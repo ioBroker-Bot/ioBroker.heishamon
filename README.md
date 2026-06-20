@@ -7,7 +7,7 @@ ioBroker adapter that talks the **Panasonic Aquarea CN-CNT** protocol directly o
 
 ## Installation
 
-In the ioBroker admin UI: **Adapters → install from custom URL** (or, once published, from the official ioBroker repository) → `ioBroker.heishamon`.
+Install from the official ioBroker repository via the admin UI: open the **Adapters** tab, search for **heishamon**, and click install.
 
 For detailed wiring and OS-level instructions (serial permissions, RS232 wiring, RS485 converter), see [INSTALL.md](INSTALL.md).
 
@@ -56,12 +56,20 @@ Protocol decoding builds on the work of the [HeishaMon community](https://github
     ### **WORK IN PROGRESS**
 -->
 
+### 0.0.8 (2026-06-20)
+* (Tobias Hanss) Maintenance for ioBroker repository acceptance: adapter-managed timers for clean shutdown, Node.js >=22 required, CI runs the adapter tests on Linux, Windows and macOS. No functional change to the heat-pump communication
+
+### 0.0.7 (2026-05-30)
+* (Tobias Hanss) Response-driven half-duplex bus: every send now waits for the heat pump's reply (or a timeout) before the next frame goes out, and retries up to 3 times on timeout or CRC error
+* (Tobias Hanss) After a CRC error a randomised backoff precedes the next bus access to avoid lock-step collisions with a second master (Option-PCB)
+* (Tobias Hanss) New "Diagnostics" setting toggles the set-command response logging (off by default)
+
+### 0.0.6 (2026-05-30)
+* (Tobias Hanss) Diagnostic logging to reverse-engineer the heat pump's SET acknowledgement: logs the sent frame and the heat pump's reply (frame type, timing, hexdump) at info level
+
 ### 0.0.5 (2026-05-30)
 * (Tobias Hanss) Wire-queue gap is now enforced between every pair of sends, including across idle periods (previously the gap only applied while multiple tasks were already stacked in the queue — so polls and isolated sets bypassed it entirely)
 * (Tobias Hanss) Queue is hard-capped at 100 pending entries; overflows are logged at warn level and the dropped send is skipped instead of silently piling up
-
-### 0.0.4 (2026-05-30)
-* (Tobias Hanss) Diagnostic logging for the wire queue (effective minSendGapMs on startup, debug entries for every poll/set enqueue and send with wait time and pending queue size)
 
 ### 0.0.3 (2026-05-26)
 * (Tobias Hanss) Serialize all wire writes through a FIFO queue with a configurable inter-frame gap (default 200 ms). Fixes lost set commands when a script writes several datapoints at once

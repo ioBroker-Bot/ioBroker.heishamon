@@ -7,14 +7,11 @@
  * piece of round-robin state, and never mutates the transport beyond
  * calling `send()`. Decoding of the responses is the state-applier's job.
  *
- * Timers are injected to keep the unit tests deterministic — the default
- * uses Node's `setInterval` / `clearInterval`.
+ * Timers are injected to keep the unit tests deterministic and to let the
+ * adapter supply ioBroker-managed timers — `main.ts` passes the base-class
+ * `this.setInterval` / `this.clearInterval`; tests inject deterministic fakes.
  */
 import { buildFrame } from './protocol/index.js';
-const DEFAULT_TIMERS = {
-    setInterval: (fn, ms) => setInterval(fn, ms),
-    clearInterval: (handle) => clearInterval(handle),
-};
 /**
  * Round-robin polling scheduler.
  *
@@ -33,7 +30,7 @@ export class Poller {
     nextFrameType = 'mainPoll';
     constructor(options) {
         this.options = options;
-        this.timers = options.timers ?? DEFAULT_TIMERS;
+        this.timers = options.timers;
     }
     start() {
         if (this.handle !== null) {

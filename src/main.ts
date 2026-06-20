@@ -107,7 +107,7 @@ class HeishamonAdapter extends AdapterBase {
   private busExchange: BusExchange | null = null;
   private readonly connectionStats: ConnectionStats = new ConnectionStats();
   private lastStatsFlushAt = 0;
-  private statsFlushTimer: NodeJS.Timeout | null = null;
+  private statsFlushTimer: ioBroker.Timeout | undefined = undefined;
   private lastWrittenSnapshot: ConnectionStatsSnapshot | null = null;
   // The framer drops one byte per failed-checksum resync, so a single
   // garbled 203-byte response yields many `invalid/checksum` events. We
@@ -181,7 +181,10 @@ class HeishamonAdapter extends AdapterBase {
     // so concurrent onStateChange callbacks can never overlap a poll or
     // each other. See `src/wire-queue.ts` for the rationale.
     const gapMs = cfg.setCommandGapMs ?? DEFAULT_COMMAND_GAP_MS;
-    this.wireQueue = new WireQueue({ minSendGapMs: gapMs });
+    this.wireQueue = new WireQueue({
+      minSendGapMs: gapMs,
+      sleep: (ms) => this.delay(ms),
+    });
     this.log.info(
       `wire queue: minSendGapMs=${gapMs}, capacity=${this.wireQueue.capacity()}`,
     );
@@ -196,6 +199,7 @@ class HeishamonAdapter extends AdapterBase {
       send: (frame) => transport.send(frame),
       responseTimeoutMs,
       maxRetries,
+      sleep: (ms) => this.delay(ms),
       log: logger,
     });
     this.log.info(`bus exchange: responseTimeoutMs=${responseTimeoutMs}, maxRetries=${maxRetries}`);
@@ -232,6 +236,10 @@ class HeishamonAdapter extends AdapterBase {
           });
         },
         log: logger,
+        timers: {
+          setInterval: (fn, ms) => this.setInterval(fn, ms),
+          clearInterval: (handle) => this.clearInterval(handle as ioBroker.Interval),
+        },
       });
       this.poller.start();
     } else {
@@ -403,12 +411,12 @@ class HeishamonAdapter extends AdapterBase {
       void this.flushStatsNow(now);
       return;
     }
-    if (this.statsFlushTimer !== null) {
+    if (this.statsFlushTimer !== undefined) {
       return;
     }
     const delay = Math.max(0, STATS_FLUSH_THROTTLE_MS - sinceLast);
-    this.statsFlushTimer = setTimeout(() => {
-      this.statsFlushTimer = null;
+    this.statsFlushTimer = this.setTimeout(() => {
+      this.statsFlushTimer = undefined;
       void this.flushStatsNow(Date.now());
     }, delay);
   }
@@ -570,9 +578,9 @@ class HeishamonAdapter extends AdapterBase {
     try {
       this.poller?.stop();
       this.poller = null;
-      if (this.statsFlushTimer !== null) {
-        clearTimeout(this.statsFlushTimer);
-        this.statsFlushTimer = null;
+      if (this.statsFlushTimer !== undefined) {
+        this.clearTimeout(this.statsFlushTimer);
+        this.statsFlushTimer = undefined;
       }
       if (this.transport !== null) {
         await this.transport.close();

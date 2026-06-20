@@ -67,7 +67,7 @@
     "optionalPcbPollEnabled": {
       "type": "checkbox",
       "label": "Send optional-PCB poll frames (not yet implemented)",
-      "help": "Reserved for future SG-Ready / external thermostat support. Currently has no effect.",
+      "help": "Reserved for future SG-Ready / external thermostat support.",
       "default": false,
       "xs": 12,
       "sm": 12,

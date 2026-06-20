@@ -21,8 +21,8 @@ class FakeTransport implements AdapterTransport {
 
 interface FakeTimerHarness {
   readonly timers: {
-    readonly setInterval: (fn: () => void, ms: number) => number;
-    readonly clearInterval: (handle: number) => void;
+    readonly setInterval: (fn: () => void, ms: number) => unknown;
+    readonly clearInterval: (handle: unknown) => void;
   };
   readonly tick: () => void;
   readonly hasActiveTimer: () => boolean;
@@ -40,7 +40,7 @@ function createFakeTimerHarness(): FakeTimerHarness {
         return id;
       },
       clearInterval: (handle) => {
-        callbacks.delete(handle);
+        callbacks.delete(handle as number);
       },
     },
     tick: () => {

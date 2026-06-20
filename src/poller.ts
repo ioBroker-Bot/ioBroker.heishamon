@@ -7,8 +7,9 @@
  * piece of round-robin state, and never mutates the transport beyond
  * calling `send()`. Decoding of the responses is the state-applier's job.
  *
- * Timers are injected to keep the unit tests deterministic — the default
- * uses Node's `setInterval` / `clearInterval`.
+ * Timers are injected to keep the unit tests deterministic and to let the
+ * adapter supply ioBroker-managed timers — `main.ts` passes the base-class
+ * `this.setInterval` / `this.clearInterval`; tests inject deterministic fakes.
  */
 
 import { buildFrame, type FrameType } from './protocol/index.js';
@@ -16,8 +17,13 @@ import { buildFrame, type FrameType } from './protocol/index.js';
 import type { AdapterTransport, Logger } from './transport.js';
 
 export interface PollerTimers {
-  readonly setInterval: (fn: () => void, ms: number) => NodeJS.Timeout | number;
-  readonly clearInterval: (handle: NodeJS.Timeout | number) => void;
+  /**
+   * Returns an opaque timer handle. The poller treats it as `unknown` so an
+   * adapter-managed handle (e.g. `ioBroker.Interval`) is accepted without the
+   * poller depending on its concrete shape.
+   */
+  readonly setInterval: (fn: () => void, ms: number) => unknown;
+  readonly clearInterval: (handle: unknown) => void;
 }
 
 /**
@@ -53,14 +59,13 @@ export interface PollerOptions {
    * is the desired behaviour for a misconfigured callback.
    */
   readonly onBeforeSend?: (frameType: FrameType) => void;
-  /** Override for testing — defaults to global setInterval/clearInterval. */
-  readonly timers?: PollerTimers;
+  /**
+   * Required seam — adapter-managed interval timers. `main.ts` supplies the
+   * ioBroker base-class `this.setInterval` / `this.clearInterval`; tests
+   * inject deterministic fakes.
+   */
+  readonly timers: PollerTimers;
 }
-
-const DEFAULT_TIMERS: PollerTimers = {
-  setInterval: (fn, ms) => setInterval(fn, ms),
-  clearInterval: (handle) => clearInterval(handle as NodeJS.Timeout),
-};
 
 /**
  * Round-robin polling scheduler.
@@ -76,12 +81,12 @@ const DEFAULT_TIMERS: PollerTimers = {
 export class Poller {
   private readonly options: PollerOptions;
   private readonly timers: PollerTimers;
-  private handle: NodeJS.Timeout | number | null = null;
+  private handle: unknown = null;
   private nextFrameType: FrameType = 'mainPoll';
 
   constructor(options: PollerOptions) {
     this.options = options;
-    this.timers = options.timers ?? DEFAULT_TIMERS;
+    this.timers = options.timers;
   }
 
   start(): void {
