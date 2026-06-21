@@ -1,5 +1,7 @@
 # Phase 1 — Protokoll-Bibliothek (`heishamon-protocol`)
 
+> **ARCHIV.** Phase 1 ist abgeschlossen. Die Bibliothek wurde am 2026-05-25 (Commit `c281d4f`) aus dem damaligen Workspace `packages/heishamon-protocol/` in den Adapter integriert und lebt heute unter [`src/protocol/`](../../src/protocol/). Pfade weiter unten zeigen noch auf die historische Mono-Repo-Struktur.
+
 ## Ziel
 
 Reine TypeScript-Bibliothek, die Buffer ↔ Datenpunkte konvertiert. Keine Hardware-Abhängigkeit, vollständig offline testbar.

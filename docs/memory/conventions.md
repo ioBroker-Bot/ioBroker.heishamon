@@ -24,8 +24,8 @@
 
 ## Vendor-Code
 
-- `vendor/heishamon-upstream/` ist Referenzcode. **Nicht editieren.** Wenn Anpassungen nötig sind, eigene Patches in `vendor/heishamon-upstream/PATCHES.md` dokumentieren oder besser: das Konzept in `packages/` neu schreiben.
-- Upstream-Version (Commit-Hash + URL) in `vendor/heishamon-upstream/UPSTREAM.md` festhalten.
+- `vendor/heishamon-upstream/` ist Referenzcode (gitignored lokaler Snapshot). **Nicht editieren** — der Snapshot soll deckungsgleich mit dem Upstream-Stand bleiben. Wenn etwas am Verhalten anzupassen ist, gehört das in unseren eigenen Code unter `src/`, nicht in den Snapshot.
+- Upstream-Version (Commit-Hash + URL) lokal in `vendor/heishamon-upstream/UPSTREAM.md` festhalten.
 
 ## Memory
 

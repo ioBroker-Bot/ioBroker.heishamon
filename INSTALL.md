@@ -1,131 +1,74 @@
 # INSTALL — iobroker.heishamon
 
-Der Adapter ist (noch) nicht im offiziellen ioBroker-Repository. Diese Anleitung beschreibt, wie er manuell in eine lokale ioBroker-Instanz eingespielt wird.
+Schritt-für-Schritt-Anleitung für die Installation auf einer ioBroker-Instanz, mit Fokus auf die Linux-Defaults (`/opt/iobroker`, User `iobroker`). Für die Verdrahtung der Wärmepumpe siehe [README.md](README.md#wiring).
 
-Getestet gegen **ioBroker 7.0.7** auf Linux (systemd-Installation unter `/opt/iobroker`, User `iobroker`).
+## Voraussetzungen
 
-## Vorbedingungen
-
-- Node.js ≥ 18.18 (kommt mit ioBroker-Installer).
-- ioBroker läuft als User `iobroker`. Dieser User muss in der Gruppe `dialout` sein, um auf serielle USB-Adapter (`/dev/ttyUSB*`) zugreifen zu können.
+- ioBroker ≥ 7.0, Node.js ≥ 22.
+- User `iobroker` ist in der Gruppe `dialout`, damit er auf serielle Geräte zugreifen kann:
   ```bash
   groups iobroker          # muss 'dialout' enthalten
-  sudo usermod -aG dialout iobroker   # falls nicht
+  sudo usermod -aG dialout iobroker  # falls nicht — anschließend ioBroker neu starten
   ```
-- USB-RS232-Adapter (oder ein per RS232↔RS485-Konverter angebundener RS485-Adapter, falls längere Distanz nötig) ist eingesteckt. Persistenten Pfad ermitteln:
+- Serial-Device ist eingesteckt und reproduzierbar erreichbar. Stabilen `/dev/serial/by-id/...`-Pfad notieren:
   ```bash
   ls -l /dev/serial/by-id/
   ```
-  Den `/dev/serial/by-id/...`-Pfad notieren — der bleibt nach Reboot stabil, `/dev/ttyUSB0` wandert.
+  Bei Pi-GPIO-UART ist der Pfad statisch (z.B. `/dev/ttyAMA2`).
 
-## Schritt 1 — Pakete bauen
+## Installation
 
-Aus dem Repo-Root (`/home/administrator/develop/projects/IOBrockerHeishaMon`):
+Sobald der Adapter im offiziellen ioBroker-Repository ist, geht der Standard-Weg über die Admin-UI: **Adapter → heishamon suchen → installieren**.
 
-```bash
-npm install
-npm run build
-```
-
-Damit werden `packages/heishamon-protocol/dist/` und `packages/iobroker.heishamon/build/` erzeugt.
-
-Optional: Test-Baseline verifizieren:
-```bash
-npm test 2>&1 | grep -E "Tests +[0-9]+ passed"
-```
-Erwartung: 3× grün (Stand 2026-05: 330 + 176 + 30 = 536).
-
-## Schritt 2 — Adapter nach ioBroker kopieren
-
-`iobroker.heishamon` referenziert `heishamon-protocol` als Workspace-Paket (`"heishamon-protocol": "*"`). Das funktioniert *nicht* über `iobroker url <tarball>` oder `iobroker add` aus dem Repo, weil npm die Workspace-Referenz dann nicht auflösen kann. Wir installieren daher per Copy:
+Bis dahin (oder für Pre-Releases) direkt aus npm:
 
 ```bash
-# als root oder mit sudo
-ADAPTER_DIR=/opt/iobroker/node_modules/iobroker.heishamon
-PROTO_DIR=/opt/iobroker/node_modules/heishamon-protocol
-
-sudo -u iobroker mkdir -p "$ADAPTER_DIR" "$PROTO_DIR"
-
-# heishamon-protocol (nur das, was 'files' im package.json erlaubt: dist, src, README)
-sudo cp -r packages/heishamon-protocol/{dist,package.json,README.md} "$PROTO_DIR/"
-
-# Adapter
-sudo cp -r packages/iobroker.heishamon/{admin,build,io-package.json,package.json,README.md} "$ADAPTER_DIR/"
-
-sudo chown -R iobroker:iobroker "$ADAPTER_DIR" "$PROTO_DIR"
+sudo -u iobroker iobroker url iobroker.heishamon
 ```
 
-Workspace-Referenz auf lokale Auflösung umstellen — `"*"` würde npm sonst in der Registry suchen (404):
+Dann im Admin-UI: **Instanzen → +heishamon** anlegen.
 
-```bash
-sudo -u iobroker sed -i 's|"heishamon-protocol": "\*"|"heishamon-protocol": "file:../heishamon-protocol"|' "$ADAPTER_DIR/package.json"
-```
+## Konfiguration
 
-Anschließend Adapter-Laufzeitabhängigkeiten installieren (`@iobroker/adapter-core`, `serialport`, `heishamon-protocol` per Symlink auf den Geschwisterordner):
+Im Admin-UI → Instanzen → `heishamon.0` → Einstellungen:
 
-```bash
-cd "$ADAPTER_DIR"
-sudo -u iobroker npm install --omit=dev --no-package-lock
-```
-
-## Schritt 3 — Adapter bei ioBroker registrieren
-
-```bash
-sudo -u iobroker iobroker upload heishamon
-sudo -u iobroker iobroker add heishamon 0
-```
-
-`upload` schiebt das Admin-UI (`admin/jsonConfig.json`, i18n) in die ioBroker-Objektdatenbank. `add` erstellt die Instanz `heishamon.0`.
-
-## Schritt 4 — Instanz konfigurieren
-
-Im ioBroker-Admin (`http://<host>:8081`) → **Instanzen** → `heishamon.0` → Einstellungen:
-
-| Feld | Wert |
+| Feld | Empfehlung beim ersten Start |
 |---|---|
-| Serial Port | `/dev/serial/by-id/usb-Prolific_...` (Pfad aus Schritt 0) |
-| Baudrate | `9600` (HeishaMon-Default) |
-| Poll-Intervall (s) | `10` für ersten Test, später `60` |
-| Read-Only-Modus | **aktiviert** für ersten Test (verhindert Set-Commands an die WP) |
+| Serial port | `/dev/serial/by-id/...` (stabilen Pfad nutzen, nicht `/dev/ttyUSB0`) |
+| Baud rate | `9600` (Panasonic CN-CNT-Default — nicht ändern) |
+| Poll interval | `5` Sekunden |
+| Read-only mode | **aktivieren** — verhindert jeden Set-Command, sicherer Erststart |
+| Extra poll | `true` (harmlos bei älteren WPs) |
 
-Speichern → der Adapter startet automatisch. Bei `mode: daemon` läuft er kontinuierlich.
+Speichern → Adapter startet automatisch.
 
-## Schritt 5 — Verifizieren
+## Verifikation
 
 ```bash
-# Adapter-Logs (folgen)
 sudo -u iobroker iobroker logs heishamon --watch
-
-# oder einmalig
-sudo tail -n 200 -f /opt/iobroker/log/iobroker.current.log | grep heishamon
 ```
 
-Erwartetes Bild bei laufendem Simulator oder echter WP:
+Erwartetes Bild bei laufender WP:
+- `info: wire queue: minSendGapMs=…, capacity=100`
+- `info: opened /dev/serial/by-id/… @ 9600 8E1`
+- Nach wenigen Sekunden: 157 Datenpunkte unter `heishamon.0.main.*` und `heishamon.0.extra.*`.
+- `heishamon.0.info.connection = true`, `info.connectionQuality` läuft Richtung 100.
 
-- `info: Opening serial port /dev/serial/by-id/...`
-- `info: Poller started, intervall 10s`
-- Nach erstem erfolgreichen Poll: 157 Datenpunkte unter `heishamon.0.*` im Objektbaum.
+Object-Tree im Admin prüfen: **Objekte → heishamon.0** → Devices `main`, `extra`, ggf. `optional`, plus `info`.
 
-Object-Tree im Admin prüfen: **Objekte** → `heishamon.0` → erwartete Devices: `main`, `extra`, ggf. `optional`.
-
-## Update auf eine neue Adapter-Version
+## Update auf eine neue Version
 
 ```bash
-# im Repo: neu bauen
-npm run build
-
-# nach $ADAPTER_DIR und $PROTO_DIR die geänderten Ordner überschreiben:
-sudo cp -r packages/heishamon-protocol/dist "$PROTO_DIR/"
-sudo cp -r packages/iobroker.heishamon/build "$ADAPTER_DIR/"
-sudo cp -r packages/iobroker.heishamon/admin "$ADAPTER_DIR/"
-sudo cp packages/iobroker.heishamon/io-package.json "$ADAPTER_DIR/"
-sudo chown -R iobroker:iobroker "$ADAPTER_DIR" "$PROTO_DIR"
-
-# bei Änderungen am UI:
-sudo -u iobroker iobroker upload heishamon
-
-# Adapter neustarten
+sudo -u iobroker iobroker upgrade heishamon
 sudo -u iobroker iobroker restart heishamon.0
+```
+
+Falls der Adapter noch nicht im offiziellen Repository ist, geht das gezielt per npm:
+
+```bash
+sudo -u iobroker iobroker stop heishamon.0
+sudo -u iobroker npm install --prefix /opt/iobroker iobroker.heishamon@<version>
+sudo -u iobroker iobroker start heishamon.0
 ```
 
 ## Deinstallation
@@ -133,12 +76,11 @@ sudo -u iobroker iobroker restart heishamon.0
 ```bash
 sudo -u iobroker iobroker del heishamon.0
 sudo -u iobroker iobroker del heishamon
-sudo rm -rf /opt/iobroker/node_modules/iobroker.heishamon /opt/iobroker/node_modules/heishamon-protocol
 ```
 
 ## Bekannte Stolpersteine
 
-- **`EACCES: /dev/ttyUSB0`** — User `iobroker` ist nicht in `dialout`. Siehe Vorbedingungen, danach ioBroker komplett neu starten (`sudo systemctl restart iobroker`), nicht nur die Instanz: Gruppenmitgliedschaft greift erst bei neuer Session.
-- **`Cannot find module 'heishamon-protocol'`** — `heishamon-protocol` liegt nicht unter `/opt/iobroker/node_modules/heishamon-protocol/` oder dort fehlt `dist/`. Schritt 2 wiederholen.
-- **Adapter startet, aber keine Datenpunkte füllen sich** — Verkabelung/Pin-Belegung am CN-CNT-Port prüfen (RS232: TX↔RX gekreuzt, GND), Baudrate 9600, gegen [`docs/protocol/`](../../docs/protocol/) abgleichen. Bei einem RS232↔RS485-Konverter zusätzlich Polarität (A/B) prüfen. Mit Simulator gegentesten (zweiter USB-Serial-Adapter oder `socat` virtuell).
-- **Set-Command landet nicht in der WP** — Read-Only-Modus in der Instanz-Konfig ist (zurecht) per Default an. Erst deaktivieren, wenn der Read-Pfad sauber läuft.
+- **`EACCES: /dev/ttyUSB0`** — User `iobroker` ist nicht in `dialout`. Nach `usermod -aG dialout iobroker` den ganzen ioBroker-Dienst neu starten (`sudo systemctl restart iobroker`), nicht nur die Instanz — Gruppenmitgliedschaft greift erst bei neuer Session.
+- **Adapter startet, keine Datenpunkte füllen sich** — Verdrahtung am CN-CNT-Port prüfen (TX↔RX kreuzen, GND verbinden, 5V-TTL-Pegel beachten, siehe [README.md → Wiring](README.md#wiring)). Bei einem TTL↔RS485-Konverter zusätzlich A/B-Polarität und Abschlusswiderstände prüfen.
+- **Set-Commands wirken nicht** — Read-only mode in der Instanz-Konfig ist beim Erststart absichtlich aktiv. Erst deaktivieren, wenn der Read-Pfad sauber läuft.
+- **Bei Verbindung über CZ-TAW1-Bus** — Adapter zwingend im **Read-only mode** lassen, sonst entstehen Bus-Kollisionen mit dem Panasonic-Cloud-Modul.

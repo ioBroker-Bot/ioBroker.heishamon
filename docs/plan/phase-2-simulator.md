@@ -1,5 +1,7 @@
 # Phase 2 — Wärmepumpen-Simulator (`heishamon-sim`)
 
+> **ARCHIV.** Phase 2 ist abgeschlossen. Der Simulator wurde am 2026-05-25 (Commit `c281d4f`) aus dem damaligen Workspace `packages/heishamon-sim/` umgezogen und lebt heute als Entwicklungs-Tool unter [`tools/simulator/`](../../tools/simulator/) — er wird mit `npm run sim` gestartet und ist nicht Teil des publizierten Adapter-Pakets. Pfade weiter unten zeigen noch auf die historische Mono-Repo-Struktur.
+
 ## Ziel
 
 Ein Programm, das sich gegenüber einem **echten HeishaMon-Modul** wie eine Panasonic Aquarea verhält. Der Simulator ist die Sicherheitsnetz-Phase — er macht es möglich, den Adapter zu entwickeln, ohne die produktive Heizung zu riskieren.

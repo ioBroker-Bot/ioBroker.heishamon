@@ -1,5 +1,7 @@
 # Phase 4 — Read-Only-Parallelbetrieb & Cut-Over
 
+> **ARCHIV.** Die Adapter-Infrastruktur dieser Phase ist umgesetzt — der Read-only-Modus ist im Adapter eingebaut und konfigurierbar, der response-getriebene Halbduplex-Bus serialisiert Polls und Sets (v0.0.7). Der eigentliche Cut-Over passiert auf jeder Installation einmalig und ist daher kein Repo-weites Deliverable mehr.
+
 ## Ziel
 
 Der neue Adapter übernimmt den Bus, ohne dass die Heizung Schaden nimmt oder Service-Lücken entstehen.

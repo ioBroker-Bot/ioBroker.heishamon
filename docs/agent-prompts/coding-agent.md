@@ -102,7 +102,7 @@ Lies zusätzlich:
 - `docs/memory/safety-rules.md` — Sicherheitsregeln (Heizung ist produktiv!)
 - ggf. `docs/decisions/*.md` — Architekturentscheidungen
 
-Wenn du in `packages/heishamon-protocol/` arbeitest: HeishaMon-Code in `vendor/heishamon-upstream/` ist Referenz, **nicht** zum 1:1-Kopieren (clean-room, siehe `vendor/heishamon-upstream/LICENSE-NOTE.md`).
+Wenn du in `src/protocol/` arbeitest: HeishaMon-Code in `vendor/heishamon-upstream/` (gitignored, lokaler Snapshot) ist Referenz, **nicht** zum 1:1-Kopieren — clean-room. Die ausführliche Begründung steht im Credits-Block der README.
 
 ## Antwort-Format
 

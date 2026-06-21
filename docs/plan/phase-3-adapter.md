@@ -1,5 +1,7 @@
 # Phase 3 — ioBroker-Adapter (`iobroker.heishamon`)
 
+> **ARCHIV.** Phase 3 ist abgeschlossen. Der Adapter ist auf [npm](https://www.npmjs.com/package/iobroker.heishamon) publiziert und läuft live an einer echten Aquarea-WP. Mit dem Mono-Repo-Revert am 2026-05-25 (Commit `c281d4f`) ist `packages/iobroker.heishamon/` im Repo-Root aufgegangen. Pfade weiter unten zeigen noch auf die historische Mono-Repo-Struktur.
+
 ## Ziel
 
 Ein installierbarer ioBroker-Adapter, der direkt mit der WP spricht und dieselben Datenpunkte wie HeishaMon anbietet.

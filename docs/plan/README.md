@@ -4,13 +4,16 @@ Das Projekt ist in fünf Phasen gegliedert. Jede Phase hat ein klares Deliverabl
 
 ## Übersicht
 
+> **Hinweis:** Die Mono-Repo-Struktur (`packages/heishamon-protocol/`, `packages/heishamon-sim/`, `packages/iobroker.heishamon/`) wurde am 2026-05-25 (Commit `c281d4f`) aufgelöst. Heute lebt der Protokoll-Code unter [`src/protocol/`](../../src/protocol/), der Simulator unter [`tools/simulator/`](../../tools/simulator/), der Adapter direkt im Repo-Root. Die nachstehenden Phasen-Deliverables wurden entsprechend wegmigriert; die Links in den Phase-Dateien zeigen noch auf die historischen Pfade.
+
 | Phase | Titel | Status | Deliverable | Datei |
 |-------|-------|--------|-------------|-------|
 | 0 | Recon & Protokoll-Audit | ✅ abgeschlossen | [`docs/protocol/`](../protocol/) gefüllt | [phase-0-recon.md](phase-0-recon.md) |
-| 1 | Protokoll-Bibliothek (TS) | ✅ abgeschlossen | [`packages/heishamon-protocol/`](../../packages/heishamon-protocol/), 316 Tests | [phase-1-protocol-lib.md](phase-1-protocol-lib.md) |
-| 2 | WP-Simulator | 🟡 in-process komplett, Hardware-Test ausstehend | [`packages/heishamon-sim/`](../../packages/heishamon-sim/), 190 Tests | [phase-2-simulator.md](phase-2-simulator.md) |
-| 3 | ioBroker-Adapter | 🟡 in-process komplett, Install/Test in ioBroker offen | [`packages/iobroker.heishamon/`](../../packages/iobroker.heishamon/), 30 Tests | [phase-3-adapter.md](phase-3-adapter.md) |
-| 4 | Parallelbetrieb & Cut-Over | offen | Heizung läuft am neuen Adapter | [phase-4-cutover.md](phase-4-cutover.md) |
+| 1 | Protokoll-Bibliothek (TS) | ✅ abgeschlossen | [`src/protocol/`](../../src/protocol/), heute Teil des Adapter-Builds | [phase-1-protocol-lib.md](phase-1-protocol-lib.md) |
+| 2 | WP-Simulator | ✅ abgeschlossen | [`tools/simulator/`](../../tools/simulator/), Hardware-Test gegen echtes HeishaMon erfolgreich | [phase-2-simulator.md](phase-2-simulator.md) |
+| 3 | ioBroker-Adapter | ✅ abgeschlossen | Adapter ist auf [npm](https://www.npmjs.com/package/iobroker.heishamon) publiziert, läuft live an einer echten Aquarea-WP | [phase-3-adapter.md](phase-3-adapter.md) |
+| 4 | Parallelbetrieb & Cut-Over | ✅ Read-only-Modus eingebaut | Read-only-Modus im Adapter implementiert; der individuelle Cut-Over passiert auf jeder Installation einmal | [phase-4-cutover.md](phase-4-cutover.md) |
+| 5 | ioBroker-Repo-Aufnahme | 🟡 läuft | PR gegen [`iobroker/ioBroker.repositories`](https://github.com/iobroker/ioBroker.repositories) steht aus | — |
 
 ## Phase 1 — Offene Punkte für später
 

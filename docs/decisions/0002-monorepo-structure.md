@@ -1,7 +1,9 @@
 # ADR-0002: Monorepo-Struktur mit npm-Workspaces
 
-**Status:** Accepted
+**Status:** Superseded am 2026-05-25 (Commit `c281d4f`)
 **Datum:** 2026-05-23
+
+> **Hintergrund der Aufhebung:** Der ioBroker-Repochecker und die offiziellen Aufnahme-Konventionen verlangen ein Standalone-Adapter-Repo mit `io-package.json` im Root und Repo-Name nach dem Schema `ioBroker.<name>`. Der Mono-Repo-Ansatz war für die Phasen 0–3 nützlich (saubere Bibliotheks-Grenzen, getrennte Test-Suites), passte aber nicht zur Release-Pipeline. Bei der Restrukturierung wurden `heishamon-protocol` als `src/protocol/`, `heishamon-sim` als `tools/simulator/` und `iobroker.heishamon` direkt ins Repo-Root gehoben. Tests und Build laufen seitdem aus einer einzigen `package.json`.
 
 ## Kontext
 

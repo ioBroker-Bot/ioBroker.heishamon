@@ -5,6 +5,10 @@ ioBroker adapter that talks the **Panasonic Aquarea CN-CNT** protocol directly o
 
 > **Status:** Early release. Protocol library, simulator and adapter logic are complete in-process; field testing against a real heat pump is the next step.
 
+## Supported heat pumps
+
+Panasonic Aquarea air-to-water heat pumps of the **H, J, K and L series**.
+
 ## Installation
 
 Install from the official ioBroker repository via the admin UI: open the **Adapters** tab, search for **heishamon**, and click install.
@@ -30,12 +34,65 @@ For detailed wiring and OS-level instructions (serial permissions, RS232 wiring,
 - **Connection-quality statistics** (frames in/out, CRC errors, timeouts) under the `info.*` channel.
 - **Optional extra data block** for K/L series heat pumps (6 extra energy datapoints).
 
+## ⚠️ Write-rate considerations
+
+The Panasonic Aquarea controller's internal storage mechanism for settings is not documented. Normal use — manual changes, occasional smart-home automation — is very unlikely to cause wear; the HeishaMon community has years of operational experience without reported failures. However, high-frequency writes (e.g. a PID loop adjusting a setpoint every few seconds) could in theory exhaust an EEPROM cell over time if the controller is not using FRAM, MRAM, or a RAM-with-power-loss-flush design.
+
+**Avoid writing the same datapoint more often than every few minutes** unless you have specific knowledge that your controller revision tolerates it. For closed-loop regulation, prefer a slow outer loop that drives the heat pump's own internal controllers rather than commanding the actuator directly.
+
 ## Hardware
 
 - ioBroker host with a serial interface, such as a Raspberry Pi UART, USB-TTL UART adapter, or USB-RS485 adapter with a suitable converter.
 - Logic-level shifter is required when connecting a 3.3V UART, such as the Raspberry Pi UART, directly to the heat pump's 5V TTL UART pins.
 - Use a 5V-compatible USB-TTL UART adapter if connecting via USB directly.
 - For long cable runs, place a TTL/RS485 converter near the heat pump or host and use shielded twisted pair cable.
+
+## Wiring
+
+> ⚠️ **Measure twice, connect once.** Everything here is provided **without any warranty** and used **entirely at your own risk and liability.**
+
+The heat pump mainboard exposes two equivalent connectors that this adapter can use: **CN-CNT** and **CN-NMODE**. Either one works — pick whichever is easier to reach.
+
+![Panasonic Aquarea mainboard showing the CN-CNT and CN-NMODE connectors](docs/images/mainboard-connectors.jpg)
+
+`CN-CNT` is the connector normally used for the **CZ-TAW1 cloud module** or the **Optional PCB**:
+
+- If a **CZ-TAW1** module is connected, run this adapter in **read-only mode** so it only listens and never drives the bus.
+- With the **Optional PCB** present there are two bus masters, so collisions can occur — it should generally still work. After a CRC error the adapter waits a randomised time before the next bus access to break collision lock-step (see the response-driven bus notes in the changelog).
+
+Both connectors carry a **5V TTL UART** signal, so a level shifter is required for 3.3V hosts such as the Raspberry Pi GPIO. The signal names below are given **from the heat pump's point of view** — cross them at the adapter end (heat-pump TX → adapter RX, heat-pump RX → adapter TX).
+
+### CN-CNT — JST `B05B-XASK-1` (mating connector `PAP-05V-S`)
+
+| Pin | Signal |
+|---|---|
+| 1 | +5 V |
+| 2 | TX, 5V level (from the heat pump) |
+| 3 | RX, 5V level (to the heat pump) |
+| 4 | +12 V |
+| 5 | GND |
+
+### CN-NMODE — JST PH series (mating connector `PHR-4`, available pre-wired from the usual large online retailers)
+
+| Pin | Signal |
+|---|---|
+| 1 | GND |
+| 2 | RX, 5V level (to the heat pump) |
+| 3 | TX, 5V level (from the heat pump) |
+| 4 | +5 V |
+
+### Connection variants
+
+- **Heat pump ↔ 5V-level USB-TTL UART converter ↔ PC**
+- **Heat pump ↔ RS232 transceiver ↔ USB/RS232 dongle ↔ PC**
+- **Heat pump ↔ level shifter (to 3.3V) ↔ UART-capable Raspberry Pi GPIO**
+- **Heat pump ↔ UART-to-RS485 converter ↔ long two-wire line, 120 Ω (don't forget the termination resistors!) ↔ UART-to-RS485 converter ↔ level shifter (to 3.3V) ↔ Pi GPIO**
+
+> If you are not familiar with **ground / equalizing currents** and how to handle them, always add **galvanic isolation** — on the USB side this is cheap and easy.
+
+Example — a UART-to-RS485 converter wired to the `CN-CNT` connector (the heat-pump end of the RS485 long-distance variant):
+
+![UART-to-RS485 converter wired to the CN-CNT connector](docs/images/cn-cnt-rs485-converter.jpg)
 
 ## Documentation
 
@@ -45,9 +102,17 @@ Project documentation lives under [docs/](docs/):
 - [docs/protocol/](docs/protocol/) — CN-CNT protocol analysis.
 - [docs/decisions/](docs/decisions/) — architecture decision records.
 
-## Credits
+## Credits and upstream licensing
 
-Protocol decoding builds on the work of the [HeishaMon community](https://github.com/Egyras/HeishaMon). The CN-CNT register map and many implementation hints originate there. This adapter is a clean-room TypeScript reimplementation; see [vendor/heishamon-upstream/LICENSE-NOTE.md](vendor/heishamon-upstream/LICENSE-NOTE.md) for details.
+Protocol decoding builds on the work of the [HeishaMon community](https://github.com/Egyras/HeishaMon). The CN-CNT register map and many implementation hints originate there.
+
+At the time of writing, the HeishaMon repository carries **no explicit license file** — no `LICENSE`, no header in the sources, no clear statement in the README. Under US and EU copyright law, this defaults to "all rights reserved", so we cannot copy or directly port the original code. To stay clean:
+
+- The HeishaMon C++ sources serve **only as a reference** for understanding the Panasonic CN-CNT protocol.
+- This adapter is a **clean-room TypeScript reimplementation**: we read the upstream sources, distilled the protocol into [docs/protocol/](docs/protocol/), and implemented from that documentation — not from the original code.
+- The HeishaMon repository's protocol documentation files (`MQTT-Topics.md`, `OptionalPCB.md`, `ProtocolByteDecrypt.md`) describe an observable physical protocol — that is factual information and not subject to copyright; they are cited as sources where relevant.
+
+The CN-CNT protocol itself is not published by Panasonic; what HeishaMon discovered is empirical observation. Facts are not copyrightable, but the specific C++ implementation of those discoveries is.
 
 ## Changelog
 
