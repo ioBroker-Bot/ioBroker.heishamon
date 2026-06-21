@@ -121,6 +121,9 @@ The CN-CNT protocol itself is not published by Panasonic; what HeishaMon discove
     ### **WORK IN PROGRESS**
 -->
 
+### 0.0.10 (2026-06-21)
+* (Tobias Hanss) Published from CI with npm provenance (signed build attestation). No change to the adapter itself
+
 ### 0.0.9 (2026-06-21)
 * (Tobias Hanss) CI: the release workflow's npm-publish step is now idempotent — it skips publishing when the version is already on npm, so a manual publish no longer makes the tagged release run fail. No change to the adapter itself
 
