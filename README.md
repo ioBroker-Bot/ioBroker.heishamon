@@ -121,6 +121,10 @@ The CN-CNT protocol itself is not published by Panasonic; what HeishaMon discove
     ### **WORK IN PROGRESS**
 -->
 
+
+### **WORK IN PROGRESS**
+- (ioBroker-Bot) Adapter requires admin >= 7.8.23 now.
+
 ### 0.0.10 (2026-06-21)
 * (Tobias Hanss) Published from CI with npm provenance (signed build attestation). No change to the adapter itself
 

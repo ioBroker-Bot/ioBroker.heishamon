@@ -108,8 +108,19 @@
       "uk": "Напряму спілкується з тепловим насосом Panasonic Aquarea за протоколом CN-CNT через послідовний порт (RS232 на роз'ємі CN-CNT; за потреби конвертер RS232/RS485 для довгих кабелів) без HeishaMon та MQTT.",
       "zh-cn": "通过串口直接与 Panasonic Aquarea 热泵的 CN-CNT 协议通讯（CN-CNT 接口为 RS232 电平，长线缆可选配 RS232/RS485 转换器），无需 HeishaMon 与 MQTT。"
     },
-    "authors": ["Tobias Hanss <tobias.hanss@atcetera.de>"],
-    "keywords": ["heishamon", "panasonic", "aquarea", "heatpump", "rs232", "rs485", "cn-cnt", "serial"],
+    "authors": [
+      "Tobias Hanss <tobias.hanss@atcetera.de>"
+    ],
+    "keywords": [
+      "heishamon",
+      "panasonic",
+      "aquarea",
+      "heatpump",
+      "rs232",
+      "rs485",
+      "cn-cnt",
+      "serial"
+    ],
     "licenseInformation": {
       "license": "MIT",
       "type": "free"
@@ -134,10 +145,14 @@
       "deviceManager": false
     },
     "dependencies": [
-      { "js-controller": ">=6.0.11" }
+      {
+        "js-controller": ">=6.0.11"
+      }
     ],
     "globalDependencies": [
-      { "admin": ">=7.6.20" }
+      {
+        "admin": ">=7.8.23"
+      }
     ]
   },
   "native": {
