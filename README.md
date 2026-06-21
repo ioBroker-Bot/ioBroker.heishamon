@@ -90,7 +90,7 @@ Both connectors carry a **5V TTL UART** signal, so a level shifter is required f
 
 > If you are not familiar with **ground / equalizing currents** and how to handle them, always add **galvanic isolation** — on the USB side this is cheap and easy.
 
-Example — a UART-to-RS485 converter wired to the `CN-CNT` connector (the heat-pump end of the RS485 long-distance variant):
+Example — a UART-to-RS485 converter wired to the `CN-NMODE` connector (the heat-pump end of the RS485 long-distance variant):
 
 ![UART-to-RS485 converter wired to the CN-CNT connector](docs/images/cn-cnt-rs485-converter.jpg)
 
