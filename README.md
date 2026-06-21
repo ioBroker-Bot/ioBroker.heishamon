@@ -152,6 +152,8 @@ The CN-CNT protocol itself is not published by Panasonic; what HeishaMon discove
 ### 0.0.1 (2026-05-25)
 * (Tobias Hanss) Initial adapter release
 
+[Older changelogs can be found there](CHANGELOG_OLD.md)
+
 ## License
 
 MIT License
