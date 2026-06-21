@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@iobroker/testing": "^5.2.2",
+    "@tsconfig/node22": "^22.0.5",
     "@types/node": "^18.19.0",
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
