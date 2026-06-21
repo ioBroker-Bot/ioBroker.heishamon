@@ -121,6 +121,9 @@ The CN-CNT protocol itself is not published by Panasonic; what HeishaMon discove
     ### **WORK IN PROGRESS**
 -->
 
+### 0.0.9 (2026-06-21)
+* (Tobias Hanss) CI: the release workflow's npm-publish step is now idempotent — it skips publishing when the version is already on npm, so a manual publish no longer makes the tagged release run fail. No change to the adapter itself
+
 ### 0.0.8 (2026-06-20)
 * (Tobias Hanss) Maintenance for ioBroker repository acceptance: adapter-managed timers for clean shutdown, Node.js >=22 required, CI runs the adapter tests on Linux, Windows and macOS. No functional change to the heat-pump communication
 

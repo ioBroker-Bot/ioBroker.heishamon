@@ -115,6 +115,16 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Publish to npm
-        run: npm publish --access public
+        # Idempotent: skip when this version is already on npm (e.g. it was
+        # published manually). This keeps the release run green instead of
+        # failing with "cannot publish over the previously published version".
+        run: |
+          VERSION="${{ steps.extract_release.outputs.VERSION }}"
+          PUBLISHED="$(npm view "iobroker.heishamon@${VERSION}" version 2>/dev/null || true)"
+          if [ -n "${PUBLISHED}" ]; then
+            echo "iobroker.heishamon@${VERSION} is already on npm — skipping publish."
+          else
+            npm publish --access public
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

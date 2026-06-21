@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "heishamon",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "news": {
+      "0.0.9": {
+        "en": "CI: the release workflow's npm-publish step is now idempotent — it skips publishing when the version is already on npm, so a manual publish no longer makes the tagged release run fail. No change to the adapter itself.",
+        "de": "CI: Der npm-Publish-Schritt des Release-Workflows ist jetzt idempotent — er überspringt das Veröffentlichen, wenn die Version bereits auf npm ist, sodass ein manuelles Publish den getaggten Release-Run nicht mehr fehlschlagen lässt. Keine Änderung am Adapter selbst.",
+        "ru": "CI: шаг публикации в npm в релизном workflow теперь идемпотентен — он пропускает публикацию, если версия уже есть в npm, поэтому ручная публикация больше не приводит к сбою тегированного релизного запуска. Сам адаптер не изменён.",
+        "pt": "CI: o passo de publicação no npm do workflow de release é agora idempotente — ignora a publicação quando a versão já está no npm, pelo que uma publicação manual deixa de fazer falhar a execução do release com tag. Sem alterações no próprio adaptador.",
+        "nl": "CI: de npm-publicatiestap van de release-workflow is nu idempotent — publiceren wordt overgeslagen wanneer de versie al op npm staat, zodat een handmatige publicatie de getagde release-run niet meer laat falen. Geen wijziging aan de adapter zelf.",
+        "fr": "CI : l'étape de publication npm du workflow de release est désormais idempotente — elle ignore la publication si la version est déjà sur npm, de sorte qu'une publication manuelle ne fait plus échouer l'exécution du release taggé. Aucun changement de l'adaptateur lui-même.",
+        "it": "CI: il passo di pubblicazione su npm del workflow di release è ora idempotente — salta la pubblicazione quando la versione è già su npm, così una pubblicazione manuale non fa più fallire l'esecuzione della release taggata. Nessuna modifica all'adattatore stesso.",
+        "es": "CI: el paso de publicación en npm del workflow de release ahora es idempotente — omite la publicación cuando la versión ya está en npm, de modo que una publicación manual ya no hace fallar la ejecución del release etiquetado. Sin cambios en el adaptador.",
+        "pl": "CI: krok publikacji npm w workflow wydania jest teraz idempotentny — pomija publikację, gdy wersja jest już w npm, więc ręczna publikacja nie powoduje już niepowodzenia otagowanego uruchomienia wydania. Bez zmian w samym adapterze.",
+        "uk": "CI: крок публікації в npm у релізному workflow тепер ідемпотентний — він пропускає публікацію, якщо версія вже є в npm, тож ручна публікація більше не призводить до збою тегованого релізного запуску. Самого адаптера не змінено.",
+        "zh-cn": "CI：发布工作流的 npm 发布步骤现在是幂等的——当版本已在 npm 上时跳过发布，因此手动发布不再导致带标签的发布运行失败。适配器本身无变化。"
+      },
       "0.0.8": {
         "en": "Maintenance release for ioBroker repository acceptance: timers are now managed by the adapter base class for clean shutdown, Node.js >=22 is required, and the CI runs the adapter tests on Linux, Windows and macOS. No functional change to the heat-pump communication.",
         "de": "Wartungs-Release für die ioBroker-Repo-Aufnahme: Timer werden jetzt von der Adapter-Basisklasse verwaltet (sauberes Beenden), Node.js >=22 wird vorausgesetzt, und die CI führt die Adapter-Tests unter Linux, Windows und macOS aus. Keine funktionale Änderung an der WP-Kommunikation.",
