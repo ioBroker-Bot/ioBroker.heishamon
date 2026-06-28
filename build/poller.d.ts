@@ -9,18 +9,18 @@
  *
  * Timers are injected to keep the unit tests deterministic and to let the
  * adapter supply ioBroker-managed timers — `main.ts` passes the base-class
- * `this.setInterval` / `this.clearInterval`; tests inject deterministic fakes.
+ * `this.setTimeout` / `this.clearTimeout`; tests inject deterministic fakes.
  */
 import { type FrameType } from './protocol/index.js';
 import type { AdapterTransport, Logger } from './transport.js';
 export interface PollerTimers {
     /**
-     * Returns an opaque timer handle. The poller treats it as `unknown` so an
-     * adapter-managed handle (e.g. `ioBroker.Interval`) is accepted without the
+     * One-shot timer. Returns an opaque handle treated as `unknown` so an
+     * adapter-managed handle (e.g. `ioBroker.Timeout`) is accepted without the
      * poller depending on its concrete shape.
      */
-    readonly setInterval: (fn: () => void, ms: number) => unknown;
-    readonly clearInterval: (handle: unknown) => void;
+    readonly setTimeout: (fn: () => void, ms: number) => unknown;
+    readonly clearTimeout: (handle: unknown) => void;
 }
 /**
  * Hand-off contract for a single send operation. The poller passes the frame
@@ -55,8 +55,8 @@ export interface PollerOptions {
      */
     readonly onBeforeSend?: (frameType: FrameType) => void;
     /**
-     * Required seam — adapter-managed interval timers. `main.ts` supplies the
-     * ioBroker base-class `this.setInterval` / `this.clearInterval`; tests
+     * Required seam — adapter-managed one-shot timers. `main.ts` supplies the
+     * ioBroker base-class `this.setTimeout` / `this.clearTimeout`; tests
      * inject deterministic fakes.
      */
     readonly timers: PollerTimers;
@@ -68,18 +68,31 @@ export interface PollerOptions {
  *  - `extraPollEnabled = true`: ticks alternate `mainPoll` / `extraPoll`,
  *    starting with `mainPoll`.
  *
- *  `start()` runs the first tick synchronously so the adapter sees a
- *  response on startup instead of waiting `pollIntervalMs`. `stop()` is
- *  idempotent and safe to call before `start()`.
+ * Scheduling is **end-of-tick**: `start()` runs the first tick immediately
+ * (so the adapter sees a response on startup instead of waiting), and the
+ * *next* tick is scheduled with a one-shot `setTimeout` only after the
+ * current one has fully completed — including the bus exchange's retries.
+ * This guarantees poll ticks can never overlap or pile up in the wire queue,
+ * even when the heat pump stops answering and every send runs its full retry
+ * budget. `stop()` is idempotent and safe to call before `start()`.
  */
 export declare class Poller {
     private readonly options;
     private readonly timers;
     private handle;
+    private stopped;
     private nextFrameType;
     constructor(options: PollerOptions);
     start(): void;
     stop(): void;
+    /**
+     * Run one tick to completion, then — unless stopped meanwhile — arm a
+     * one-shot timer for the next cycle. Because `tick()` awaits the full send
+     * (which, in production, resolves only after the bus exchange has finished
+     * its retries), the interval is measured from the end of one poll to the
+     * start of the next, so ticks never overrun each other.
+     */
+    private runCycle;
     private tick;
     private computeNextFrameType;
     private log;

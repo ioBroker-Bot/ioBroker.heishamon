@@ -38,6 +38,18 @@ const SET_PROBE_WINDOW_MS = 3000;
  * snappy for interactive set-commands.
  */
 const DEFAULT_COMMAND_GAP_MS = 200;
+/**
+ * Largest delay Node.js `setTimeout` accepts; anything above this silently
+ * wraps and fires almost immediately. Any user-supplied millisecond value
+ * that ends up in a timer (`this.delay`, `this.setTimeout`) is clamped to
+ * this ceiling so a fat-fingered config can never break timing at runtime.
+ */
+const MAX_TIMER_MS = 2_147_483_647;
+/**
+ * Upper bound for the configurable retry count. More than this would let a
+ * single transaction hold the bus for minutes on sustained failure.
+ */
+const MAX_SEND_RETRIES = 10;
 // `@iobroker/adapter-core` re-types `Adapter` as a bare `AdapterConstructor`
 // without a prototype/instance type, which makes `extends utils.Adapter`
 // lose the method surface (log, setStateAsync, …). Casting the runtime
@@ -171,8 +183,8 @@ class HeishamonAdapter extends AdapterBase {
                 },
                 log: logger,
                 timers: {
-                    setInterval: (fn, ms) => this.setInterval(fn, ms),
-                    clearInterval: (handle) => this.clearInterval(handle),
+                    setTimeout: (fn, ms) => this.setTimeout(fn, ms),
+                    clearTimeout: (handle) => this.clearTimeout(handle),
                 },
             });
             this.poller.start();
@@ -197,7 +209,70 @@ class HeishamonAdapter extends AdapterBase {
             this.terminate?.(11);
             return false;
         }
+        // Optional numeric guards. These can be set from the admin UI but also by
+        // editing the instance's `native` config or via the objects API directly,
+        // bypassing the UI min/max. Validate and clamp them here — before
+        // `ensureObjectTree()` — so an out-of-range value terminates cleanly
+        // instead of throwing later from a downstream constructor, and so a value
+        // above the Node.js timer ceiling can never silently misfire at runtime.
+        const mutable = cfg;
+        const gap = this.clampOptionalMs(cfg.setCommandGapMs, 'setCommandGapMs', 0);
+        if (gap === null)
+            return false;
+        if (gap !== undefined)
+            mutable.setCommandGapMs = gap;
+        const timeout = this.clampOptionalMs(cfg.responseTimeoutMs, 'responseTimeoutMs', 1);
+        if (timeout === null)
+            return false;
+        if (timeout !== undefined)
+            mutable.responseTimeoutMs = timeout;
+        const retries = this.clampRetries(cfg.sendMaxRetries);
+        if (retries === null)
+            return false;
+        if (retries !== undefined)
+            mutable.sendMaxRetries = retries;
         return true;
+    }
+    /**
+     * Validate an optional millisecond value and clamp it into `[min, MAX_TIMER_MS]`.
+     * Returns `undefined` when unset (caller keeps the default), the clamped
+     * number when valid, or `null` when the value is present but not a finite
+     * number — in which case the adapter has already been terminated.
+     */
+    clampOptionalMs(value, label, min) {
+        if (value === undefined) {
+            return undefined;
+        }
+        if (typeof value !== 'number' || !Number.isFinite(value)) {
+            this.log.error(`config.${label} must be a finite number, got ${String(value)}`);
+            this.terminate?.(11);
+            return null;
+        }
+        if (value < min || value > MAX_TIMER_MS) {
+            const clamped = Math.min(MAX_TIMER_MS, Math.max(min, value));
+            this.log.warn(`config.${label}=${value} out of range [${min}, ${MAX_TIMER_MS}], clamping to ${clamped}`);
+            return clamped;
+        }
+        return value;
+    }
+    /**
+     * Validate the optional retry count: a non-negative integer, clamped to
+     * {@link MAX_SEND_RETRIES}. Same return contract as {@link clampOptionalMs}.
+     */
+    clampRetries(value) {
+        if (value === undefined) {
+            return undefined;
+        }
+        if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+            this.log.error(`config.sendMaxRetries must be a non-negative integer, got ${String(value)}`);
+            this.terminate?.(11);
+            return null;
+        }
+        if (value > MAX_SEND_RETRIES) {
+            this.log.warn(`config.sendMaxRetries=${value} exceeds ${MAX_SEND_RETRIES}, clamping to ${MAX_SEND_RETRIES}`);
+            return MAX_SEND_RETRIES;
+        }
+        return value;
     }
     async ensureObjectTree() {
         const { channels, states, infoStates } = buildObjectTree();

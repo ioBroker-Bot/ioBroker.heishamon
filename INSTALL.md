@@ -1,86 +1,66 @@
 # INSTALL — iobroker.heishamon
 
-Schritt-für-Schritt-Anleitung für die Installation auf einer ioBroker-Instanz, mit Fokus auf die Linux-Defaults (`/opt/iobroker`, User `iobroker`). Für die Verdrahtung der Wärmepumpe siehe [README.md](README.md#wiring).
+Step-by-step guide for installing the adapter on an ioBroker instance, focused on the Linux defaults (`/opt/iobroker`, user `iobroker`). For wiring the heat pump, see [README.md](README.md#wiring).
 
-## Voraussetzungen
+A German version of this guide is available in [INSTALL_de.md](INSTALL_de.md).
+
+## Prerequisites
 
 - ioBroker ≥ 7.0, Node.js ≥ 22.
-- User `iobroker` ist in der Gruppe `dialout`, damit er auf serielle Geräte zugreifen kann:
+- The `iobroker` user must be in the `dialout` group so it can access serial devices:
   ```bash
-  groups iobroker          # muss 'dialout' enthalten
-  sudo usermod -aG dialout iobroker  # falls nicht — anschließend ioBroker neu starten
+  groups iobroker                     # must contain 'dialout'
+  sudo usermod -aG dialout iobroker   # if not — then restart ioBroker
   ```
-- Serial-Device ist eingesteckt und reproduzierbar erreichbar. Stabilen `/dev/serial/by-id/...`-Pfad notieren:
+- The serial device is plugged in and reliably reachable. Note a stable `/dev/serial/by-id/...` path:
   ```bash
   ls -l /dev/serial/by-id/
   ```
-  Bei Pi-GPIO-UART ist der Pfad statisch (z.B. `/dev/ttyAMA2`).
+  For a Pi GPIO UART the path is static (e.g. `/dev/ttyAMA2`).
 
 ## Installation
 
-Sobald der Adapter im offiziellen ioBroker-Repository ist, geht der Standard-Weg über die Admin-UI: **Adapter → heishamon suchen → installieren**.
+Install from the official ioBroker repository via the admin UI: **Adapters → search for `heishamon` → install**.
 
-Bis dahin (oder für Pre-Releases) direkt aus npm:
+Then create an instance: **Instances → add `heishamon`**.
 
-```bash
-sudo -u iobroker iobroker url iobroker.heishamon
-```
+## Configuration
 
-Dann im Admin-UI: **Instanzen → +heishamon** anlegen.
+In the admin UI → Instances → `heishamon.0` → settings:
 
-## Konfiguration
-
-Im Admin-UI → Instanzen → `heishamon.0` → Einstellungen:
-
-| Feld | Empfehlung beim ersten Start |
+| Field | Recommendation for the first start |
 |---|---|
-| Serial port | `/dev/serial/by-id/...` (stabilen Pfad nutzen, nicht `/dev/ttyUSB0`) |
-| Baud rate | `9600` (Panasonic CN-CNT-Default — nicht ändern) |
-| Poll interval | `5` Sekunden |
-| Read-only mode | **aktivieren** — verhindert jeden Set-Command, sicherer Erststart |
-| Extra poll | `true` (harmlos bei älteren WPs) |
+| Serial port | `/dev/serial/by-id/...` (use the stable path, not `/dev/ttyUSB0`) |
+| Baud rate | `9600` (Panasonic CN-CNT default — do not change) |
+| Poll interval | `5` seconds |
+| Read-only mode | **enable** — blocks every set-command, a safe first start |
+| Extra poll | `true` (harmless on older heat pumps) |
 
-Speichern → Adapter startet automatisch.
+Save → the adapter starts automatically.
 
-## Verifikation
+## Verification
 
-```bash
-sudo -u iobroker iobroker logs heishamon --watch
-```
+Open the adapter log in the admin UI (**Log** tab, filter for `heishamon`).
 
-Erwartetes Bild bei laufender WP:
+Expected picture with a running heat pump:
 - `info: wire queue: minSendGapMs=…, capacity=100`
 - `info: opened /dev/serial/by-id/… @ 9600 8E1`
-- Nach wenigen Sekunden: 157 Datenpunkte unter `heishamon.0.main.*` und `heishamon.0.extra.*`.
-- `heishamon.0.info.connection = true`, `info.connectionQuality` läuft Richtung 100.
+- After a few seconds: 157 datapoints under `heishamon.0.main.*` and `heishamon.0.extra.*`.
+- `heishamon.0.info.connection = true`, and `info.connectionQuality` climbs towards 100.
 
-Object-Tree im Admin prüfen: **Objekte → heishamon.0** → Devices `main`, `extra`, ggf. `optional`, plus `info`.
+Check the object tree in the admin UI: **Objects → heishamon.0** → channels `main`, `extra`, optionally `optional`, plus `info`.
 
-## Update auf eine neue Version
+## Update to a new version
 
-```bash
-sudo -u iobroker iobroker upgrade heishamon
-sudo -u iobroker iobroker restart heishamon.0
-```
+Update from the admin UI: **Adapters → `heishamon` → update**. The instance restarts automatically.
 
-Falls der Adapter noch nicht im offiziellen Repository ist, geht das gezielt per npm:
+## Uninstall
 
-```bash
-sudo -u iobroker iobroker stop heishamon.0
-sudo -u iobroker npm install --prefix /opt/iobroker iobroker.heishamon@<version>
-sudo -u iobroker iobroker start heishamon.0
-```
+Remove the instance and the adapter from the admin UI: **Instances → delete `heishamon.0`**, then **Adapters → delete `heishamon`**.
 
-## Deinstallation
+## Known pitfalls
 
-```bash
-sudo -u iobroker iobroker del heishamon.0
-sudo -u iobroker iobroker del heishamon
-```
-
-## Bekannte Stolpersteine
-
-- **`EACCES: /dev/ttyUSB0`** — User `iobroker` ist nicht in `dialout`. Nach `usermod -aG dialout iobroker` den ganzen ioBroker-Dienst neu starten (`sudo systemctl restart iobroker`), nicht nur die Instanz — Gruppenmitgliedschaft greift erst bei neuer Session.
-- **Adapter startet, keine Datenpunkte füllen sich** — Verdrahtung am CN-CNT-Port prüfen (TX↔RX kreuzen, GND verbinden, 5V-TTL-Pegel beachten, siehe [README.md → Wiring](README.md#wiring)). Bei einem TTL↔RS485-Konverter zusätzlich A/B-Polarität und Abschlusswiderstände prüfen.
-- **Set-Commands wirken nicht** — Read-only mode in der Instanz-Konfig ist beim Erststart absichtlich aktiv. Erst deaktivieren, wenn der Read-Pfad sauber läuft.
-- **Bei Verbindung über CZ-TAW1-Bus** — Adapter zwingend im **Read-only mode** lassen, sonst entstehen Bus-Kollisionen mit dem Panasonic-Cloud-Modul.
+- **`EACCES: /dev/ttyUSB0`** — the `iobroker` user is not in `dialout`. After `usermod -aG dialout iobroker`, restart the whole ioBroker service (`sudo systemctl restart iobroker`), not just the instance — group membership only takes effect in a new session.
+- **Adapter starts but no datapoints fill in** — check the wiring at the CN-CNT port (cross TX↔RX, connect GND, mind the 5 V TTL levels, see [README.md → Wiring](README.md#wiring)). With a TTL↔RS485 converter also check A/B polarity and termination resistors.
+- **Set-commands have no effect** — read-only mode is intentionally active on the first start. Disable it only once the read path runs cleanly.
+- **When connected via the CZ-TAW1 bus** — keep the adapter in **read-only mode**, otherwise it causes bus collisions with the Panasonic cloud module.

@@ -81,6 +81,17 @@ describe('BusExchange — construction & validation', () => {
     ).toThrow();
   });
 
+  it('throws when responseTimeoutMs exceeds the Node.js timer ceiling', () => {
+    const send = async (): Promise<void> => {};
+    expect(
+      () => new BusExchange({ send, responseTimeoutMs: 2_147_483_648, sleep: noopSleep }),
+    ).toThrow();
+    // The exact ceiling is still accepted.
+    expect(
+      () => new BusExchange({ send, responseTimeoutMs: 2_147_483_647, sleep: noopSleep }),
+    ).not.toThrow();
+  });
+
   it('throws on a bad maxRetries', () => {
     const send = async (): Promise<void> => {};
     expect(() => new BusExchange({ send, maxRetries: -1, sleep: noopSleep })).toThrow();

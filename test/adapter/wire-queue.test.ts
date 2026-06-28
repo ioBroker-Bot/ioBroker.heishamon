@@ -273,6 +273,16 @@ describe('WireQueue', () => {
     ).toThrow();
   });
 
+  it('throws when minSendGapMs exceeds the Node.js timer ceiling', () => {
+    expect(
+      () => new WireQueue({ minSendGapMs: 2_147_483_648, sleep: noopSleep }),
+    ).toThrow();
+    // The exact ceiling is still accepted.
+    expect(
+      () => new WireQueue({ minSendGapMs: 2_147_483_647, sleep: noopSleep }),
+    ).not.toThrow();
+  });
+
   it('preserves FIFO order across a many-task burst', async () => {
     const { sleep, now } = createClock();
     const queue = new WireQueue({ minSendGapMs: 0, sleep, now });

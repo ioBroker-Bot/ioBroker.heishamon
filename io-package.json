@@ -158,7 +158,16 @@
       "common": {
         "name": {
           "en": "Adapter information",
-          "de": "Adapter-Informationen"
+          "de": "Adapter-Informationen",
+          "ru": "Информация об адаптере",
+          "pt": "Informações do adaptador",
+          "nl": "Adapter-informatie",
+          "fr": "Informations sur l'adaptateur",
+          "it": "Informazioni sull'adattatore",
+          "es": "Información del adaptador",
+          "pl": "Informacje o adapterze",
+          "uk": "Інформація про адаптер",
+          "zh-cn": "适配器信息"
         }
       },
       "native": {}

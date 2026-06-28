@@ -9,7 +9,7 @@
  *
  * Timers are injected to keep the unit tests deterministic and to let the
  * adapter supply ioBroker-managed timers — `main.ts` passes the base-class
- * `this.setInterval` / `this.clearInterval`; tests inject deterministic fakes.
+ * `this.setTimeout` / `this.clearTimeout`; tests inject deterministic fakes.
  */
 import { buildFrame } from './protocol/index.js';
 /**
@@ -19,38 +19,57 @@ import { buildFrame } from './protocol/index.js';
  *  - `extraPollEnabled = true`: ticks alternate `mainPoll` / `extraPoll`,
  *    starting with `mainPoll`.
  *
- *  `start()` runs the first tick synchronously so the adapter sees a
- *  response on startup instead of waiting `pollIntervalMs`. `stop()` is
- *  idempotent and safe to call before `start()`.
+ * Scheduling is **end-of-tick**: `start()` runs the first tick immediately
+ * (so the adapter sees a response on startup instead of waiting), and the
+ * *next* tick is scheduled with a one-shot `setTimeout` only after the
+ * current one has fully completed — including the bus exchange's retries.
+ * This guarantees poll ticks can never overlap or pile up in the wire queue,
+ * even when the heat pump stops answering and every send runs its full retry
+ * budget. `stop()` is idempotent and safe to call before `start()`.
  */
 export class Poller {
     options;
     timers;
     handle = null;
+    stopped = true;
     nextFrameType = 'mainPoll';
     constructor(options) {
         this.options = options;
         this.timers = options.timers;
     }
     start() {
-        if (this.handle !== null) {
+        if (!this.stopped) {
             return;
         }
-        // Fire one tick immediately, then continue on the interval.
-        this.tick();
-        this.handle = this.timers.setInterval(() => {
-            this.tick();
-        }, this.options.pollIntervalMs);
+        this.stopped = false;
+        void this.runCycle();
     }
     stop() {
-        if (this.handle === null) {
-            return;
+        this.stopped = true;
+        if (this.handle !== null) {
+            this.timers.clearTimeout(this.handle);
+            this.handle = null;
         }
-        this.timers.clearInterval(this.handle);
-        this.handle = null;
         this.nextFrameType = 'mainPoll';
     }
-    tick() {
+    /**
+     * Run one tick to completion, then — unless stopped meanwhile — arm a
+     * one-shot timer for the next cycle. Because `tick()` awaits the full send
+     * (which, in production, resolves only after the bus exchange has finished
+     * its retries), the interval is measured from the end of one poll to the
+     * start of the next, so ticks never overrun each other.
+     */
+    async runCycle() {
+        await this.tick();
+        if (this.stopped) {
+            return;
+        }
+        this.handle = this.timers.setTimeout(() => {
+            this.handle = null;
+            void this.runCycle();
+        }, this.options.pollIntervalMs);
+    }
+    async tick() {
         const frameType = this.nextFrameType;
         this.nextFrameType = this.computeNextFrameType(frameType);
         const frame = buildFrame(frameType);
@@ -60,26 +79,26 @@ export class Poller {
         // hits the wire — not when the frame is merely enqueued. The hook
         // therefore runs inside the closure handed to the sender (which may
         // delay execution via a queue).
-        const dispatch = async () => {
-            if (this.options.onBeforeSend !== undefined) {
-                try {
-                    this.options.onBeforeSend(frameType);
-                }
-                catch (error) {
-                    const message = error instanceof Error ? error.message : String(error);
-                    this.log('error', `onBeforeSend hook failed for ${frameType}: ${message}`);
-                    return;
-                }
+        if (this.options.onBeforeSend !== undefined) {
+            try {
+                this.options.onBeforeSend(frameType);
             }
-            await send(frame);
-        };
+            catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                this.log('error', `onBeforeSend hook failed for ${frameType}: ${message}`);
+                return;
+            }
+        }
         // Promise rejections must not crash the scheduler — log and move on.
-        // The next tick will retry, which is the right behaviour for a flaky
+        // The next cycle will retry, which is the right behaviour for a flaky
         // serial link.
-        void dispatch().catch((error) => {
+        try {
+            await send(frame);
+        }
+        catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             this.log('error', `failed to send ${frameType}: ${message}`);
-        });
+        }
     }
     computeNextFrameType(current) {
         if (!this.options.extraPollEnabled) {

@@ -13,7 +13,7 @@ Panasonic Aquarea air-to-water heat pumps of the **H, J, K and L series**.
 
 Install from the official ioBroker repository via the admin UI: open the **Adapters** tab, search for **heishamon**, and click install.
 
-For detailed wiring and OS-level instructions (serial permissions, RS232 wiring, RS485 converter), see [INSTALL.md](INSTALL.md).
+For detailed wiring and OS-level instructions (serial permissions, RS232 wiring, RS485 converter), see [INSTALL.md](INSTALL.md) (German: [INSTALL_de.md](INSTALL_de.md)).
 
 ## Configuration
 

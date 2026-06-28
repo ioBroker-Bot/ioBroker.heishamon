@@ -30,6 +30,12 @@ export const DEFAULT_RESPONSE_TIMEOUT_MS = 1000;
 export const DEFAULT_MAX_RETRIES = 3;
 export const DEFAULT_CRC_BACKOFF_MIN_MS = 50;
 export const DEFAULT_CRC_BACKOFF_MAX_MS = 300;
+/**
+ * Largest delay Node.js `setTimeout` accepts. A `responseTimeoutMs` above this
+ * would wrap around and fire almost immediately. The adapter clamps the
+ * configured value up front; the constructor enforces the ceiling too.
+ */
+const MAX_RESPONSE_TIMEOUT_MS = 2_147_483_647;
 const defaultRandom = () => Math.random();
 export class BusExchange {
     send;
@@ -55,6 +61,9 @@ export class BusExchange {
         const responseTimeoutMs = options.responseTimeoutMs ?? DEFAULT_RESPONSE_TIMEOUT_MS;
         if (!Number.isFinite(responseTimeoutMs) || responseTimeoutMs <= 0) {
             throw new Error(`BusExchange: responseTimeoutMs must be a positive finite number, got ${responseTimeoutMs}`);
+        }
+        if (responseTimeoutMs > MAX_RESPONSE_TIMEOUT_MS) {
+            throw new Error(`BusExchange: responseTimeoutMs must not exceed ${MAX_RESPONSE_TIMEOUT_MS} ms, got ${responseTimeoutMs}`);
         }
         const maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
         if (!Number.isInteger(maxRetries) || maxRetries < 0) {

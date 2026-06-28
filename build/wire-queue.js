@@ -21,6 +21,13 @@
  */
 const defaultNow = () => Date.now();
 const DEFAULT_MAX_QUEUE_SIZE = 100;
+/**
+ * Largest delay Node.js `setTimeout` accepts; a larger gap would wrap around
+ * and fire almost immediately, defeating the throttle. The adapter clamps the
+ * configured value before constructing the queue, but the constructor enforces
+ * the ceiling too as defense-in-depth for any other caller.
+ */
+const MAX_SEND_GAP_MS = 2_147_483_647;
 export class WireQueueFullError extends Error {
     maxQueueSize;
     constructor(maxQueueSize) {
@@ -42,6 +49,9 @@ export class WireQueue {
     constructor(options) {
         if (!Number.isFinite(options.minSendGapMs) || options.minSendGapMs < 0) {
             throw new Error(`WireQueue: minSendGapMs must be a non-negative finite number, got ${options.minSendGapMs}`);
+        }
+        if (options.minSendGapMs > MAX_SEND_GAP_MS) {
+            throw new Error(`WireQueue: minSendGapMs must not exceed ${MAX_SEND_GAP_MS} ms, got ${options.minSendGapMs}`);
         }
         const maxSize = options.maxQueueSize ?? DEFAULT_MAX_QUEUE_SIZE;
         if (!Number.isInteger(maxSize) || maxSize <= 0) {

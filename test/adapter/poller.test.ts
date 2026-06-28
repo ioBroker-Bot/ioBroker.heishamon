@@ -21,35 +21,50 @@ class FakeTransport implements AdapterTransport {
 
 interface FakeTimerHarness {
   readonly timers: {
-    readonly setInterval: (fn: () => void, ms: number) => unknown;
-    readonly clearInterval: (handle: unknown) => void;
+    readonly setTimeout: (fn: () => void, ms: number) => unknown;
+    readonly clearTimeout: (handle: unknown) => void;
   };
-  readonly tick: () => void;
+  /** Fire the single pending one-shot timer (the scheduled next cycle). */
+  readonly fire: () => void;
   readonly hasActiveTimer: () => boolean;
 }
 
+/**
+ * Models a one-shot timer: at most one is pending at a time (the poller
+ * schedules the next cycle only at the end of the current one). `fire()`
+ * runs and consumes it, mirroring real `setTimeout` semantics.
+ */
 function createFakeTimerHarness(): FakeTimerHarness {
-  const callbacks = new Map<number, () => void>();
+  let pending: { id: number; fn: () => void } | null = null;
   let nextId = 1;
 
   return {
     timers: {
-      setInterval: (fn) => {
+      setTimeout: (fn) => {
         const id = nextId++;
-        callbacks.set(id, fn);
+        pending = { id, fn };
         return id;
       },
-      clearInterval: (handle) => {
-        callbacks.delete(handle as number);
+      clearTimeout: (handle) => {
+        if (pending !== null && pending.id === handle) {
+          pending = null;
+        }
       },
     },
-    tick: () => {
-      for (const fn of callbacks.values()) {
+    fire: () => {
+      if (pending !== null) {
+        const { fn } = pending;
+        pending = null;
         fn();
       }
     },
-    hasActiveTimer: () => callbacks.size > 0,
+    hasActiveTimer: () => pending !== null,
   };
+}
+
+/** Drain microtasks so the end-of-tick reschedule (an awaited send) settles. */
+function flush(): Promise<void> {
+  return new Promise<void>((resolve) => setImmediate(resolve));
 }
 
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
@@ -81,7 +96,7 @@ describe('Poller', () => {
 
     poller.start();
     // Allow the queued micro-tasks from the synchronous send() to settle.
-    await Promise.resolve();
+    await flush();
 
     expect(transport.sent.length).toBe(1);
     expect(bytesEqual(transport.sent[0]!, mainPollFrame)).toBe(true);
@@ -89,7 +104,7 @@ describe('Poller', () => {
     poller.stop();
   });
 
-  it('keeps sending mainPoll every tick when extraPollEnabled is false', async () => {
+  it('keeps sending mainPoll every cycle when extraPollEnabled is false', async () => {
     const harness = createFakeTimerHarness();
     const poller = new Poller({
       pollIntervalMs: 5000,
@@ -99,9 +114,11 @@ describe('Poller', () => {
     });
 
     poller.start();
-    harness.tick();
-    harness.tick();
-    await Promise.resolve();
+    await flush();
+    harness.fire();
+    await flush();
+    harness.fire();
+    await flush();
 
     expect(transport.sent.length).toBe(3);
     for (const sent of transport.sent) {
@@ -120,11 +137,14 @@ describe('Poller', () => {
       timers: harness.timers,
     });
 
-    poller.start();        // tick 1 -> main
-    harness.tick();        // tick 2 -> extra
-    harness.tick();        // tick 3 -> main
-    harness.tick();        // tick 4 -> extra
-    await Promise.resolve();
+    poller.start();        // cycle 1 -> main
+    await flush();
+    harness.fire();        // cycle 2 -> extra
+    await flush();
+    harness.fire();        // cycle 3 -> main
+    await flush();
+    harness.fire();        // cycle 4 -> extra
+    await flush();
 
     expect(transport.sent.length).toBe(4);
     expect(bytesEqual(transport.sent[0]!, mainPollFrame)).toBe(true);
@@ -145,13 +165,13 @@ describe('Poller', () => {
     });
 
     poller.start();
-    await Promise.resolve();
+    await flush();
     poller.stop();
 
     expect(harness.hasActiveTimer()).toBe(false);
     const sentBeforeTick = transport.sent.length;
-    harness.tick(); // no-op: callbacks were cleared
-    await Promise.resolve();
+    harness.fire(); // no-op: the pending timer was cleared
+    await flush();
     expect(transport.sent.length).toBe(sentBeforeTick);
   });
 
@@ -170,13 +190,13 @@ describe('Poller', () => {
 
     poller.start();
     // Wait for the rejected promise's catch handler to run.
-    await new Promise<void>((resolve) => setImmediate(resolve));
+    await flush();
 
     expect(log).toHaveBeenCalledWith('error', expect.stringContaining('boom'));
 
-    // The next tick should still go through.
-    harness.tick();
-    await Promise.resolve();
+    // The next cycle should still go through.
+    harness.fire();
+    await flush();
     expect(transport.sent.length).toBe(1);
     expect(bytesEqual(transport.sent[0]!, mainPollFrame)).toBe(true);
 
@@ -220,8 +240,9 @@ describe('Poller', () => {
     });
 
     poller.start();
-    harness.tick();
-    await Promise.resolve();
+    await flush();
+    harness.fire();
+    await flush();
 
     expect(order).toEqual(['before:mainPoll', 'send', 'before:mainPoll', 'send']);
 
@@ -244,7 +265,7 @@ describe('Poller', () => {
     });
 
     poller.start();
-    await Promise.resolve();
+    await flush();
 
     expect(transport.sent.length).toBe(0);
     expect(log).toHaveBeenCalledWith('error', expect.stringContaining('hook-boom'));
@@ -263,14 +284,14 @@ describe('Poller', () => {
 
     poller.start();
     poller.start();
-    await Promise.resolve();
+    await flush();
 
     // Only one immediate send from the first start().
     expect(transport.sent.length).toBe(1);
 
-    harness.tick();
-    await Promise.resolve();
-    // One additional send from the single registered interval.
+    harness.fire();
+    await flush();
+    // One additional send from the single scheduled cycle.
     expect(transport.sent.length).toBe(2);
 
     poller.stop();

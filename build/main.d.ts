@@ -26,6 +26,18 @@ declare class HeishamonAdapter extends AdapterBase {
     constructor(options?: Partial<utils.AdapterOptions>);
     private onReady;
     private validateConfig;
+    /**
+     * Validate an optional millisecond value and clamp it into `[min, MAX_TIMER_MS]`.
+     * Returns `undefined` when unset (caller keeps the default), the clamped
+     * number when valid, or `null` when the value is present but not a finite
+     * number — in which case the adapter has already been terminated.
+     */
+    private clampOptionalMs;
+    /**
+     * Validate the optional retry count: a non-negative integer, clamped to
+     * {@link MAX_SEND_RETRIES}. Same return contract as {@link clampOptionalMs}.
+     */
+    private clampRetries;
     private ensureObjectTree;
     private buildLogger;
     private handleFramerEvent;

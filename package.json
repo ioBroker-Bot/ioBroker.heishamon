@@ -34,7 +34,8 @@
     "io-package.json",
     "LICENSE",
     "README.md",
-    "INSTALL.md"
+    "INSTALL.md",
+    "INSTALL_de.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
