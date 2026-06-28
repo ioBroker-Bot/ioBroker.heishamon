@@ -14,6 +14,7 @@
  *
  * Order matches `docs/protocol/datapoints.md`, table 1.
  */
+// prettier-ignore
 export const MAIN_DATAPOINTS = [
     { id: 'TOP0', name: 'Heatpump_State', source: 'main', byte: 4, decoder: 'getBit7and8', writable: true, unit: 'On/Off', description: 'Heatpump on/off state' },
     { id: 'TOP1', name: 'Pump_Flow', source: 'main', byte: 0, decoder: 'unknown', writable: false, unit: 'l/min', description: 'Circulation pump flow rate' },
@@ -172,6 +173,7 @@ export const MAIN_DATAPOINTS = [
  * fields via bit masks inside `getOptDataValue()` rather than per-byte
  * decoders.
  */
+// prettier-ignore
 export const OPTIONAL_DATAPOINTS = [
     { id: 'OPT0', name: 'Z1_Water_Pump', source: 'optional', byte: 4, decoder: 'getOptDataValue', writable: false, description: 'Zone 1 water pump action request' },
     { id: 'OPT1', name: 'Z1_Mixing_Valve', source: 'optional', byte: 4, decoder: 'getOptDataValue', writable: false, description: 'Zone 1 mixing valve action request' },
@@ -187,6 +189,7 @@ export const OPTIONAL_DATAPOINTS = [
  * Each value is a little-endian 16-bit unsigned integer spanning `byte` and
  * `byte + 1` in the 203-byte extra-block response frame.
  */
+// prettier-ignore
 export const EXTRA_DATAPOINTS = [
     { id: 'XTOP0', name: 'Heat_Power_Consumption_Extra', source: 'extra', byte: 14, decoder: 'getUintt16', writable: false, unit: 'Watt', description: 'Additional heating power consumption data' },
     { id: 'XTOP1', name: 'Cool_Power_Consumption_Extra', source: 'extra', byte: 16, decoder: 'getUintt16', writable: false, unit: 'Watt', description: 'Additional cooling power consumption data' },

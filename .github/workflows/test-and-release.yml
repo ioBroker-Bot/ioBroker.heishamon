@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: ioBroker/testing-action-check@v1
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           type-checking: true
           lint: true
 
@@ -31,6 +31,7 @@ jobs:
   # integration test (test:integration, which boots a real js-controller and
   # this adapter) on every supported OS and Node.js version.
   adapter-tests:
+    needs: [check-and-lint]
     if: contains(github.event.head_commit.message, '[skip ci]') == false
     runs-on: ${{ matrix.os }}
     strategy:
@@ -44,9 +45,10 @@ jobs:
           os: ${{ matrix.os }}
           build: true
 
-  # Publishes to npm and creates a GitHub release on a version tag. Standard
-  # ioBroker deploy action (the manual provenance publish was dropped in favour
-  # of the standard workflow).
+  # Publishes to npm and creates a GitHub release on a version tag. Uses npm
+  # trusted publishing (OIDC) — no npm-token — so the published package is
+  # signed with provenance. Requires a trusted publisher to be configured for
+  # this package on npmjs.com (repo + workflow file).
   deploy:
     needs: [check-and-lint, adapter-tests]
     if: |
@@ -60,7 +62,6 @@ jobs:
     steps:
       - uses: ioBroker/testing-action-deploy@v1
         with:
-          node-version: '22.x'
+          node-version: '24.x'
           build: true
-          npm-token: ${{ secrets.NPM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
