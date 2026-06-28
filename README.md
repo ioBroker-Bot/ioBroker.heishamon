@@ -11,9 +11,24 @@ Panasonic Aquarea air-to-water heat pumps of the **H, J, K and L series**.
 
 ## Installation
 
-Install from the official ioBroker repository via the admin UI: open the **Adapters** tab, search for **heishamon**, and click install.
+Install from the official ioBroker repository via the admin UI: open the **Adapters** tab, search for **heishamon**, and click install. Then add an instance under **Instances**.
 
-For detailed wiring and OS-level instructions (serial permissions, RS232 wiring, RS485 converter), see [INSTALL.md](INSTALL.md) (German: [INSTALL_de.md](INSTALL_de.md)).
+### Serial port prerequisites
+
+These are host-side steps the admin UI cannot do for you:
+
+- The ioBroker process user (`iobroker` on the standard Linux setup) must be allowed to open serial devices. On Debian/Raspberry Pi OS that means the `dialout` group:
+  ```bash
+  groups iobroker                     # must contain 'dialout'
+  sudo usermod -aG dialout iobroker   # if not — then restart the whole ioBroker service
+  ```
+- Use a stable device path so the port survives reboots and re-plugging. Prefer `/dev/serial/by-id/...` over `/dev/ttyUSB0`:
+  ```bash
+  ls -l /dev/serial/by-id/
+  ```
+  On a Raspberry Pi GPIO UART the path is static anyway (e.g. `/dev/ttyAMA2`).
+
+For wiring the heat pump, see [Wiring](#wiring) below.
 
 ## Configuration
 
@@ -93,6 +108,13 @@ Both connectors carry a **5V TTL UART** signal, so a level shifter is required f
 Example — a UART-to-RS485 converter wired to the `CN-NMODE` connector (the heat-pump end of the RS485 long-distance variant):
 
 ![UART-to-RS485 converter wired to the CN-CNT connector](docs/images/cn-cnt-rs485-converter.jpg)
+
+## Troubleshooting
+
+- **`EACCES` on the serial device** — the ioBroker process user is not in the `dialout` group. After `sudo usermod -aG dialout iobroker`, restart the whole ioBroker service (`sudo systemctl restart iobroker`), not just the instance — group membership only takes effect in a new session.
+- **Adapter starts but no datapoints appear** — check the wiring at the CN-CNT port (cross TX↔RX, connect GND, mind the 5 V TTL levels, see [Wiring](#wiring)). With a TTL↔RS485 converter, also check A/B polarity and the termination resistors. A healthy link fills ~157 datapoints under `heishamon.0.main.*` within a few seconds and sets `heishamon.0.info.connection` to `true`.
+- **Set commands have no effect** — `readOnlyMode` is a deliberate safe default for the first start. Disable it only once the read path runs cleanly.
+- **Connected via the CZ-TAW1 bus** — keep the adapter in `readOnlyMode`, otherwise it causes bus collisions with the Panasonic cloud module.
 
 ## Documentation
 
