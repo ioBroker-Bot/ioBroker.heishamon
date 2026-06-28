@@ -22,7 +22,7 @@
     "baudRate": {
       "type": "number",
       "label": "Baud rate",
-      "help": "Panasonic Aquarea always uses 9600 8E1. Do not change unless you have a custom transceiver.",
+      "help": "Panasonic Aquarea always uses 9600 8E1. Only change it if there is a specific reason to.",
       "default": 9600,
       "min": 300,
       "max": 115200,
@@ -55,7 +55,7 @@
     "extraPollEnabled": {
       "type": "checkbox",
       "label": "Poll the extra data block (K/L series only)",
-      "help": "Adds 6 additional 16-bit energy datapoints. Harmless on older models.",
+      "help": "Adds 6 additional 16-bit energy datapoints. Only enable this on a K/L series heat pump — older models do not provide these values, so each extra poll would just time out.",
       "default": true,
       "newLine": true,
       "xs": 12,
@@ -84,7 +84,7 @@
     "readOnlyMode": {
       "type": "checkbox",
       "label": "Read-only mode (passive listening)",
-      "help": "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. HeishaMon during Phase-4 parallel operation).",
+      "help": "Do not send any polls or set commands. Decode and store frames sent by another master on the bus (e.g. a HeishaMon running in parallel).",
       "default": false,
       "newLine": true,
       "xs": 12,
@@ -102,7 +102,7 @@
     "setCommandGapMs": {
       "type": "number",
       "label": "Minimum gap between wire operations (ms)",
-      "help": "Wait time after each frame before the next one may be sent. Prevents collisions when multiple set-commands run in parallel. Default 200 ms — raise it for very old heat-pump generations if needed.",
+      "help": "Wait time after each frame before the next one may be sent. Prevents collisions when multiple set-commands run in parallel. Default 200 ms — only increase it if communication problems occur.",
       "default": 200,
       "min": 0,
       "max": 5000,
