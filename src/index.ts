@@ -15,10 +15,7 @@ export type {
 } from './object-tree.js';
 
 export { ConnectionStats } from './connection-stats.js';
-export type {
-  ConnectionStatsOptions,
-  ConnectionStatsSnapshot,
-} from './connection-stats.js';
+export type { ConnectionStatsOptions, ConnectionStatsSnapshot } from './connection-stats.js';
 
 export { SerialAdapterTransport } from './transport.js';
 export type {

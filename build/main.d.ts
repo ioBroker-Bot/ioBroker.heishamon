@@ -19,12 +19,26 @@ declare class HeishamonAdapter extends AdapterBase {
     private readonly connectionStats;
     private lastStatsFlushAt;
     private statsFlushTimer;
+    private serialReconnectTimer;
     private lastWrittenSnapshot;
     private invalidRunActive;
     private setResponseProbe;
     private setProbeLoggingEnabled;
     constructor(options?: Partial<utils.AdapterOptions>);
     private onReady;
+    /**
+     * Open the serial device and wire up the queue / bus exchange / poller.
+     *
+     * A failed open does NOT terminate the adapter: it logs the error, marks
+     * `info.connection=false` and schedules a retry, so a not-yet-plugged or
+     * briefly unavailable device recovers without an instance restart (and so
+     * the standard integration test, which runs without a serial device, sees
+     * the adapter start and stay alive). Genuine misconfiguration (empty device
+     * path, bad baud rate) is still rejected earlier by `validateConfig()`.
+     */
+    private connectSerial;
+    /** Arm a single serial-reconnect timer (idempotent while one is pending). */
+    private scheduleSerialReconnect;
     private validateConfig;
     /**
      * Validate an optional millisecond value and clamp it into `[min, MAX_TIMER_MS]`.

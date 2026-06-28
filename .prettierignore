@@ -1,0 +1,4 @@
+build/
+node_modules/
+# Compact one-entry-per-line data table — keep it readable, do not reflow.
+src/protocol/datapoints.ts

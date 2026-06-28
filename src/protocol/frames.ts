@@ -130,10 +130,7 @@ export function createTemplate(type: FrameType): Uint8Array {
  * optional `mutate` callback patch the payload in place, then append the
  * checksum byte. Returns a new Uint8Array of length `FRAME_LENGTHS[type]`.
  */
-export function buildFrame(
-  type: FrameType,
-  mutate?: (payload: Uint8Array) => void,
-): Uint8Array {
+export function buildFrame(type: FrameType, mutate?: (payload: Uint8Array) => void): Uint8Array {
   const payload = createTemplate(type);
   mutate?.(payload);
 

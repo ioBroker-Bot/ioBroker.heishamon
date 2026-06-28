@@ -11,12 +11,7 @@ export { decodeExtraFrame, decodeMainFrame, decodeOptionalFrame } from './decode
 export type { DecodedFrame } from './decoder.js';
 export type { DecodedValue } from './decoders.js';
 export { encodeSetCommand } from './encoder.js';
-export {
-  FRAME_LENGTHS,
-  buildFrame,
-  createTemplate,
-  identifyFrame,
-} from './frames.js';
+export { FRAME_LENGTHS, buildFrame, createTemplate, identifyFrame } from './frames.js';
 export type { FrameType } from './frames.js';
 export { Framer } from './framer.js';
 export type { FramerEvent } from './framer.js';

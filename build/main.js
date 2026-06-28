@@ -10,7 +10,7 @@
 import { pathToFileURL } from 'node:url';
 import * as utils from '@iobroker/adapter-core';
 import { encodeSetCommand, findByName, } from './protocol/index.js';
-import { BusExchange, DEFAULT_MAX_RETRIES, DEFAULT_RESPONSE_TIMEOUT_MS, } from './bus-exchange.js';
+import { BusExchange, DEFAULT_MAX_RETRIES, DEFAULT_RESPONSE_TIMEOUT_MS } from './bus-exchange.js';
 import { ConnectionStats } from './connection-stats.js';
 import { buildObjectTree } from './object-tree.js';
 import { Poller } from './poller.js';
@@ -50,6 +50,13 @@ const MAX_TIMER_MS = 2_147_483_647;
  * single transaction hold the bus for minutes on sustained failure.
  */
 const MAX_SEND_RETRIES = 10;
+/**
+ * How long to wait before retrying to open the serial device after a failed
+ * attempt. The adapter stays alive (instance running, `info.connection=false`)
+ * and keeps retrying instead of terminating, so a transient device hiccup or a
+ * not-yet-plugged adapter recovers on its own without an instance restart.
+ */
+const SERIAL_RECONNECT_MS = 30_000;
 // `@iobroker/adapter-core` re-types `Adapter` as a bare `AdapterConstructor`
 // without a prototype/instance type, which makes `extends utils.Adapter`
 // lose the method surface (log, setStateAsync, …). Casting the runtime
@@ -66,6 +73,9 @@ class HeishamonAdapter extends AdapterBase {
     connectionStats = new ConnectionStats();
     lastStatsFlushAt = 0;
     statsFlushTimer = undefined;
+    // Pending serial-reconnect timer, armed after a failed open() so the adapter
+    // retries instead of terminating. Cleared on unload and on a successful open.
+    serialReconnectTimer = undefined;
     lastWrittenSnapshot = null;
     // The framer drops one byte per failed-checksum resync, so a single
     // garbled 203-byte response yields many `invalid/checksum` events. We
@@ -104,6 +114,19 @@ class HeishamonAdapter extends AdapterBase {
             },
             log: logger,
         });
+        await this.connectSerial(cfg, logger);
+    }
+    /**
+     * Open the serial device and wire up the queue / bus exchange / poller.
+     *
+     * A failed open does NOT terminate the adapter: it logs the error, marks
+     * `info.connection=false` and schedules a retry, so a not-yet-plugged or
+     * briefly unavailable device recovers without an instance restart (and so
+     * the standard integration test, which runs without a serial device, sees
+     * the adapter start and stay alive). Genuine misconfiguration (empty device
+     * path, bad baud rate) is still rejected earlier by `validateConfig()`.
+     */
+    async connectSerial(cfg, logger) {
         const transport = new SerialAdapterTransport({
             path: cfg.device,
             baudRate: cfg.baudRate,
@@ -116,16 +139,18 @@ class HeishamonAdapter extends AdapterBase {
             },
             log: logger,
         });
-        this.transport = transport;
         try {
             await transport.open();
         }
         catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            this.log.error(`failed to open serial device ${cfg.device}: ${message}`);
-            this.terminate?.(11);
+            this.log.error(`failed to open serial device ${cfg.device}: ${message}. ` +
+                `Retrying in ${SERIAL_RECONNECT_MS / 1000}s.`);
+            await this.setStateAsync('info.connection', { val: false, ack: true });
+            this.scheduleSerialReconnect(cfg, logger);
             return;
         }
+        this.transport = transport;
         await this.setStateAsync('info.connection', { val: true, ack: true });
         // The wire queue serialises *all* writes — polls and set-commands —
         // so concurrent onStateChange callbacks can never overlap a poll or
@@ -193,6 +218,16 @@ class HeishamonAdapter extends AdapterBase {
             this.log.info('readOnlyMode active — no polling, listening only');
         }
     }
+    /** Arm a single serial-reconnect timer (idempotent while one is pending). */
+    scheduleSerialReconnect(cfg, logger) {
+        if (this.serialReconnectTimer !== undefined) {
+            return;
+        }
+        this.serialReconnectTimer = this.setTimeout(() => {
+            this.serialReconnectTimer = undefined;
+            void this.connectSerial(cfg, logger);
+        }, SERIAL_RECONNECT_MS);
+    }
     validateConfig(cfg) {
         if (typeof cfg.device !== 'string' || cfg.device.length === 0) {
             this.log.error('config.device must be a non-empty serial device path');
@@ -217,20 +252,26 @@ class HeishamonAdapter extends AdapterBase {
         // above the Node.js timer ceiling can never silently misfire at runtime.
         const mutable = cfg;
         const gap = this.clampOptionalMs(cfg.setCommandGapMs, 'setCommandGapMs', 0);
-        if (gap === null)
+        if (gap === null) {
             return false;
-        if (gap !== undefined)
+        }
+        if (gap !== undefined) {
             mutable.setCommandGapMs = gap;
+        }
         const timeout = this.clampOptionalMs(cfg.responseTimeoutMs, 'responseTimeoutMs', 1);
-        if (timeout === null)
+        if (timeout === null) {
             return false;
-        if (timeout !== undefined)
+        }
+        if (timeout !== undefined) {
             mutable.responseTimeoutMs = timeout;
+        }
         const retries = this.clampRetries(cfg.sendMaxRetries);
-        if (retries === null)
+        if (retries === null) {
             return false;
-        if (retries !== undefined)
+        }
+        if (retries !== undefined) {
             mutable.sendMaxRetries = retries;
+        }
         return true;
     }
     /**
@@ -549,6 +590,10 @@ class HeishamonAdapter extends AdapterBase {
             if (this.statsFlushTimer !== undefined) {
                 this.clearTimeout(this.statsFlushTimer);
                 this.statsFlushTimer = undefined;
+            }
+            if (this.serialReconnectTimer !== undefined) {
+                this.clearTimeout(this.serialReconnectTimer);
+                this.serialReconnectTimer = undefined;
             }
             if (this.transport !== null) {
                 await this.transport.close();

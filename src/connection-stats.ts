@@ -144,7 +144,9 @@ export class ConnectionStats {
     }
     let good = 0;
     for (const slot of this.slots) {
-      if (slot) good += 1;
+      if (slot) {
+        good += 1;
+      }
     }
     return Math.round((good / this.slots.length) * 100);
   }

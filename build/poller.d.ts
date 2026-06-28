@@ -70,7 +70,7 @@ export interface PollerOptions {
  *
  * Scheduling is **end-of-tick**: `start()` runs the first tick immediately
  * (so the adapter sees a response on startup instead of waiting), and the
- * *next* tick is scheduled with a one-shot `setTimeout` only after the
+ * next* tick is scheduled with a one-shot `setTimeout` only after the
  * current one has fully completed — including the bus exchange's retries.
  * This guarantees poll ticks can never overlap or pile up in the wire queue,
  * even when the heat pump stops answering and every send runs its full retry

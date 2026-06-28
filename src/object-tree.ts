@@ -238,8 +238,12 @@ const ENUM_STATES: ReadonlyMap<string, Readonly<Record<number, string>>> = new M
 const STRING_DATAPOINTS: ReadonlySet<string> = new Set(['Error', 'Heat_Pump_Model']);
 
 function determineCommonType(datapoint: DataPoint): 'number' | 'string' {
-  if (datapoint.decoder === 'getErrorInfo') return 'string';
-  if (STRING_DATAPOINTS.has(datapoint.name)) return 'string';
+  if (datapoint.decoder === 'getErrorInfo') {
+    return 'string';
+  }
+  if (STRING_DATAPOINTS.has(datapoint.name)) {
+    return 'string';
+  }
   return 'number';
 }
 
@@ -248,7 +252,9 @@ function determineCommonType(datapoint: DataPoint): 'number' | 'string' {
  * adapter UI and VIS use them as hints. We pick the most specific match.
  */
 function determineRole(datapoint: DataPoint, commonType: 'number' | 'string'): string {
-  if (commonType === 'string') return 'text';
+  if (commonType === 'string') {
+    return 'text';
+  }
 
   const { name, unit, decoder, writable } = datapoint;
 
@@ -260,8 +266,12 @@ function determineRole(datapoint: DataPoint, commonType: 'number' | 'string'): s
     return writable ? 'level.temperature' : 'value.temperature';
   }
 
-  if (decoder === 'getPower' || unit === 'Watt') return 'value.power';
-  if (name.includes('_Pressure')) return 'value.pressure';
+  if (decoder === 'getPower' || unit === 'Watt') {
+    return 'value.power';
+  }
+  if (name.includes('_Pressure')) {
+    return 'value.pressure';
+  }
 
   if (
     name.includes('_Speed') ||

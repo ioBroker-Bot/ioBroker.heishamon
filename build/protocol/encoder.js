@@ -68,11 +68,14 @@ const RULES = new Map([
     // (which masks the lower 6 bits). The upstream `set_operation_mode` uses
     // 24/40 for value 2/6, but the decoder canonically maps to 25/41. We
     // follow the decoder so encode(decode(x)) == x for in-range bytes.
-    ['Operating_Mode_State', {
+    [
+        'Operating_Mode_State',
+        {
             kind: 'enumByte',
             byte: 6,
             mapping: [18, 19, 25, 33, 34, 35, 41, 26, 42],
-        }],
+        },
+    ],
     // Quiet_Mode_Level: byte 7 = (value + 1) * 8. Values 0..3 -> 8, 16, 24, 32.
     ['Quiet_Mode_Level', { kind: 'enumByte', byte: 7, mapping: [8, 16, 24, 32] }],
     // Powerful_Mode_Time: byte 7 = (value + 1) & 0b111. Values 0..3 -> 1, 2, 3, 4.
@@ -131,10 +134,13 @@ const RULES = new Map([
     // Sterilization_State decodes from byte 117 but `commands.cpp` exposes only
     // `set_force_sterilization` (byte 8 = 0 or 4), which is a one-shot trigger,
     // not a state setter. Mark as not implemented to avoid a wrong guess.
-    ['Sterilization_State', {
+    [
+        'Sterilization_State',
+        {
             kind: 'notImplemented',
             reason: 'no upstream HeishaMon set_* function maps to byte 117',
-        }],
+        },
+    ],
 ]);
 /**
  * Encode a write-command (mainSet frame) for a single writable datapoint.

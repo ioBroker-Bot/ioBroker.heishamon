@@ -166,10 +166,12 @@ const ENUM_STATES = new Map([
  */
 const STRING_DATAPOINTS = new Set(['Error', 'Heat_Pump_Model']);
 function determineCommonType(datapoint) {
-    if (datapoint.decoder === 'getErrorInfo')
+    if (datapoint.decoder === 'getErrorInfo') {
         return 'string';
-    if (STRING_DATAPOINTS.has(datapoint.name))
+    }
+    if (STRING_DATAPOINTS.has(datapoint.name)) {
         return 'string';
+    }
     return 'number';
 }
 /**
@@ -177,8 +179,9 @@ function determineCommonType(datapoint) {
  * adapter UI and VIS use them as hints. We pick the most specific match.
  */
 function determineRole(datapoint, commonType) {
-    if (commonType === 'string')
+    if (commonType === 'string') {
         return 'text';
+    }
     const { name, unit, decoder, writable } = datapoint;
     // Temperature: explicit name suffix wins, then unit °C with the canonical
     // signed-byte decoder.
@@ -186,10 +189,12 @@ function determineRole(datapoint, commonType) {
     if (looksLikeTemperature) {
         return writable ? 'level.temperature' : 'value.temperature';
     }
-    if (decoder === 'getPower' || unit === 'Watt')
+    if (decoder === 'getPower' || unit === 'Watt') {
         return 'value.power';
-    if (name.includes('_Pressure'))
+    }
+    if (name.includes('_Pressure')) {
         return 'value.pressure';
+    }
     if (name.includes('_Speed') ||
         name.includes('_Freq') ||
         name.includes('_Motor') ||

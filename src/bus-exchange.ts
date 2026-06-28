@@ -197,7 +197,11 @@ export class BusExchange {
    * @param label  Short identifier for log lines (e.g. `poll`, `set:foo`).
    * @param hooks  Optional per-call observation hooks (stats, probe arming).
    */
-  async runExchange(frame: Uint8Array, label = 'frame', hooks?: ExchangeHooks): Promise<ExchangeOutcome> {
+  async runExchange(
+    frame: Uint8Array,
+    label = 'frame',
+    hooks?: ExchangeHooks,
+  ): Promise<ExchangeOutcome> {
     const totalAttempts = this.maxRetries + 1;
     for (let attempt = 1; attempt <= totalAttempts; attempt += 1) {
       if (this.crcBackoffArmed) {

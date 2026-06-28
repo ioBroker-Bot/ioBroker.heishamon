@@ -68,7 +68,13 @@ const OPTIONAL_FRAME_LENGTH = 20;
  */
 type ByteDecoder = (frame: Uint8Array, offset: number) => number;
 
-const BYTE_DECODERS: Record<Exclude<DecoderKind, 'unknown' | 'getOptDataValue' | 'getDataValue' | 'getErrorInfo' | 'getPumpFlow'>, ByteDecoder> = {
+const BYTE_DECODERS: Record<
+  Exclude<
+    DecoderKind,
+    'unknown' | 'getOptDataValue' | 'getDataValue' | 'getErrorInfo' | 'getPumpFlow'
+  >,
+  ByteDecoder
+> = {
   getBit1,
   getBit1and2,
   getBit3and4,

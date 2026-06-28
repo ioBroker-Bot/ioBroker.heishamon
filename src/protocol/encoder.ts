@@ -25,11 +25,7 @@ import { buildFrame } from './frames.js';
  * Translation rule for a single writable topic. Discriminated by `kind` so
  * every rule documents its encoding strategy and inputs locally.
  */
-type EncoderRule =
-  | TempOffsetRule
-  | EnumByteRule
-  | LinearRule
-  | NotImplementedRule;
+type EncoderRule = TempOffsetRule | EnumByteRule | LinearRule | NotImplementedRule;
 
 /**
  * Group A: signed temperature offset. byte = value + 128. Range -128..+127.
@@ -126,11 +122,14 @@ const RULES: ReadonlyMap<string, EncoderRule> = new Map<string, EncoderRule>([
   // (which masks the lower 6 bits). The upstream `set_operation_mode` uses
   // 24/40 for value 2/6, but the decoder canonically maps to 25/41. We
   // follow the decoder so encode(decode(x)) == x for in-range bytes.
-  ['Operating_Mode_State', {
-    kind: 'enumByte',
-    byte: 6,
-    mapping: [18, 19, 25, 33, 34, 35, 41, 26, 42],
-  }],
+  [
+    'Operating_Mode_State',
+    {
+      kind: 'enumByte',
+      byte: 6,
+      mapping: [18, 19, 25, 33, 34, 35, 41, 26, 42],
+    },
+  ],
 
   // Quiet_Mode_Level: byte 7 = (value + 1) * 8. Values 0..3 -> 8, 16, 24, 32.
   ['Quiet_Mode_Level', { kind: 'enumByte', byte: 7, mapping: [8, 16, 24, 32] }],
@@ -197,10 +196,13 @@ const RULES: ReadonlyMap<string, EncoderRule> = new Map<string, EncoderRule>([
   // Sterilization_State decodes from byte 117 but `commands.cpp` exposes only
   // `set_force_sterilization` (byte 8 = 0 or 4), which is a one-shot trigger,
   // not a state setter. Mark as not implemented to avoid a wrong guess.
-  ['Sterilization_State', {
-    kind: 'notImplemented',
-    reason: 'no upstream HeishaMon set_* function maps to byte 117',
-  }],
+  [
+    'Sterilization_State',
+    {
+      kind: 'notImplemented',
+      reason: 'no upstream HeishaMon set_* function maps to byte 117',
+    },
+  ],
 ]);
 
 /**
@@ -224,20 +226,13 @@ export function encodeSetCommand(name: string, value: number): Uint8Array {
 
   const rule = RULES.get(name);
   if (!rule) {
-    throw new Error(
-      `encoder for "${name}" not implemented yet: no rule registered`,
-    );
+    throw new Error(`encoder for "${name}" not implemented yet: no rule registered`);
   }
 
   return buildFrame('mainSet', (payload) => applyRule(payload, name, rule, value));
 }
 
-function applyRule(
-  payload: Uint8Array,
-  name: string,
-  rule: EncoderRule,
-  value: number,
-): void {
+function applyRule(payload: Uint8Array, name: string, rule: EncoderRule, value: number): void {
   switch (rule.kind) {
     case 'tempOffset':
       payload[rule.byte] = encodeTempOffset(name, rule, value);
@@ -249,9 +244,7 @@ function applyRule(
       payload[rule.byte] = encodeLinear(name, rule, value);
       return;
     case 'notImplemented':
-      throw new Error(
-        `encoder for "${name}" not implemented yet: ${rule.reason}`,
-      );
+      throw new Error(`encoder for "${name}" not implemented yet: ${rule.reason}`);
   }
 }
 
@@ -260,9 +253,7 @@ function encodeTempOffset(name: string, rule: TempOffsetRule, value: number): nu
   const min = rule.min ?? SIGNED_TEMP_MIN;
   const max = rule.max ?? SIGNED_TEMP_MAX;
   if (value < min || value > max) {
-    throw new Error(
-      `value ${value} out of range for "${name}" (allowed: ${min}..${max})`,
-    );
+    throw new Error(`value ${value} out of range for "${name}" (allowed: ${min}..${max})`);
   }
   return (value + 128) & 0xff;
 }

@@ -30,11 +30,7 @@ const EXTRA_FRAME_LENGTH = 203;
  * binds this from its actual `setState` so this module stays decoupled
  * from `@iobroker/adapter-core`.
  */
-export type SetStateFn = (
-  id: string,
-  value: number | string,
-  ack: true,
-) => Promise<void> | void;
+export type SetStateFn = (id: string, value: number | string, ack: true) => Promise<void> | void;
 
 export interface StateApplierOptions {
   readonly setState: SetStateFn;

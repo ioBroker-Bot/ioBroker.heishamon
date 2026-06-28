@@ -179,10 +179,10 @@ export function getErrorInfo(frame) {
     const errorType = frame[113];
     const errorNumber = frame[114] - 17;
     if (errorType === 0xb1) {
-        return 'F' + toUpperHex2(errorNumber);
+        return `F${toUpperHex2(errorNumber)}`;
     }
     if (errorType === 0xa1) {
-        return 'H' + toUpperHex2(errorNumber);
+        return `H${toUpperHex2(errorNumber)}`;
     }
     return 'No error';
 }

@@ -6,8 +6,7 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
       - 'v[0-9]+.[0-9]+.[0-9]+-**'
-  pull_request:
-    branches: [main]
+  pull_request: {}
 
 # Cancel previous PR/branch runs when a new commit is pushed
 concurrency:
@@ -15,121 +14,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Runs type-check, lint and the package validation (test:package) via the
+  # standard ioBroker check action. No continue-on-error: a failure here fails
+  # the workflow.
   check-and-lint:
-    name: Check, lint, typecheck and test
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [22.x, 24.x]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: ioBroker/testing-action-check@v1
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
+          node-version: '22.x'
+          type-checking: true
+          lint: true
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-      - name: Run @iobroker/testing repochecker action
-        # Informational only: repochecker emits errors for findings that are
-        # legitimate but external to the code (e.g. not yet published on npm,
-        # GitHub topics not set, occasional false positives like the
-        # concurrency-block detection bug). Do not block CI on it.
-        continue-on-error: true
-        uses: ioBroker/testing-action-check@v1
-        with:
-          node-version: '24.x'
-
+  # Runs the unit tests (test:unit / Vitest) and the standard ioBroker
+  # integration test (test:integration, which boots a real js-controller and
+  # this adapter) on every supported OS and Node.js version.
   adapter-tests:
-    name: Adapter integration tests
-    needs: [check-and-lint]
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         node-version: [22.x, 24.x]
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: ioBroker/testing-action-adapter@v1
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
+          os: ${{ matrix.os }}
+          build: true
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Run adapter integration tests
-        run: npm run test:integration
-
+  # Publishes to npm and creates a GitHub release on a version tag. Standard
+  # ioBroker deploy action (the manual provenance publish was dropped in favour
+  # of the standard workflow).
   deploy:
-    name: Publish release
     needs: [check-and-lint, adapter-tests]
     if: |
       contains(github.event.head_commit.message, '[skip ci]') == false &&
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    # `id-token: write` lets `npm publish --provenance` mint a signed build
-    # provenance attestation via the GitHub OIDC token.
     permissions:
       id-token: write
-      contents: read
+      contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 24.x
-        uses: actions/setup-node@v4
+      - uses: ioBroker/testing-action-deploy@v1
         with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Extract release notes
-        id: extract_release
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Publish to npm
-        # Idempotent: skip when this version is already on npm (e.g. it was
-        # published manually). This keeps the release run green instead of
-        # failing with "cannot publish over the previously published version".
-        run: |
-          VERSION="${{ steps.extract_release.outputs.VERSION }}"
-          PUBLISHED="$(npm view "iobroker.heishamon@${VERSION}" version 2>/dev/null || true)"
-          if [ -n "${PUBLISHED}" ]; then
-            echo "iobroker.heishamon@${VERSION} is already on npm — skipping publish."
-          else
-            npm publish --provenance --access public
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          node-version: '22.x'
+          build: true
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
