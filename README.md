@@ -55,16 +55,106 @@ The Panasonic Aquarea controller's internal storage mechanism for settings is no
 
 **Avoid writing the same datapoint more often than every few minutes** unless you have specific knowledge that your controller revision tolerates it. For closed-loop regulation, prefer a slow outer loop that drives the heat pump's own internal controllers rather than commanding the actuator directly.
 
-## Hardware
+## What you need
 
-- ioBroker host with a serial interface, such as a Raspberry Pi UART, USB-TTL UART adapter, or USB-RS485 adapter with a suitable converter.
-- Logic-level shifter is required when connecting a 3.3V UART, such as the Raspberry Pi UART, directly to the heat pump's 5V TTL UART pins.
-- Use a 5V-compatible USB-TTL UART adapter if connecting via USB directly.
-- For long cable runs, place a TTL/RS485 converter near the heat pump or host and use shielded twisted pair cable.
+> **No HeishaMon device, no ESP, no MQTT broker.** This adapter talks the
+> Panasonic CN-CNT protocol **directly**. The only thing you build is a
+> **serial connection** between the heat pump and the machine that runs ioBroker
+> (PC, home server, NAS, Raspberry Pi …).
+
+**Skill level — read this first.** Setting this up means opening the heat pump's
+electronics cover and connecting two data wires plus ground to an internal
+connector. You should be comfortable with small-gauge wiring and basic
+electronics (logic levels, ground loops, RS485). It is low-voltage (5 V
+signalling), **not** mains work — but a wrong connector or reversed wiring can
+still disturb the heat pump. If that sentence makes you uneasy, this is not a
+good first electronics project.
+
+> ⚠️ **Entirely at your own risk and liability — no warranty.** Opening the unit
+> may void your manufacturer warranty. Power the heat pump off before wiring.
+> **Measure twice, connect once.**
+
+### The signal, and the building block
+
+At its core this is just a **serial connection between the ioBroker host and the
+heat pump** — nothing more exotic. The question is only how to physically run
+that link.
+
+The heat pump speaks a plain **5 V TTL UART** on its connector. The easiest way
+to realise the link is a **5 V USB-to-TTL UART adapter**: three wires only —
+**GND ↔ GND** and the two data lines **crossed** (heat-pump TX → adapter RX,
+heat-pump RX → adapter TX) — leave +5 V / +12 V unconnected. A pre-wired
+`PHR-4` pigtail into **CN-NMODE** makes this often solder-free.
+
+**Galvanic isolation is optional — but understand what is at stake.** The heat
+pump's RX/TX pins may be wired **directly to its microcontroller**, with little
+or no protection in between. Excessive voltage or current on these lines — a
+ground / equalizing-current loop, a wiring slip, a +12 V pin brushed against a
+signal line — can **destroy that microcontroller and leave you with a dead heat
+pump mainboard**. If you are unsure about ground / equalizing currents between
+heat pump and host, a cheap **USB isolator** on the USB side removes that path.
+Otherwise protect the lines another way (e.g. series resistors or PTC fuses) —
+many installations run fine without any isolation, but that is a decision you
+make knowingly.
+
+That bare adapter is fine **only if the ioBroker host genuinely sits next to the
+heat pump** — a bench test, or a small SBC mounted right at the unit.
+
+### Recommended setup — 2-wire RS485 over distance
+
+In practice the ioBroker host is in another room or another floor, not 2 m from
+the heat pump. The sensible real-world link is therefore **RS485 over a shielded
+twisted pair**, which also matches the protocol's half-duplex nature:
+
+```
+heat pump (5 V TTL, CN-NMODE)
+   └─ TTL↔RS485 converter        ← near the heat pump
+        └─ shielded twisted pair, 120 Ω termination at BOTH ends, mind A/B
+             └─ RS485↔USB adapter ← at the ioBroker host
+                  └─ USB → ioBroker host  →  /dev/serial/by-id/…
+```
+
+You build the same TTL front end as above, but instead of running USB the full
+distance you convert to RS485 right at the heat pump and run two wires to the
+host. The small **TTL↔RS485 converter** boards cost only a few dollars from the
+usual online retailers and typically already carry **basic line protection**
+(TVS diodes / biasing resistors) — a welcome extra margin on the heat-pump side.
+Galvanic isolation remains optional and, if used, is simplest on the host USB
+side.
+
+Whichever path you choose, the adapter only ever sees a **local serial device
+path** — continue at [Configuration](#configuration).
+
+### Other variants (advanced)
+
+<details>
+<summary>Raspberry Pi GPIO UART (ioBroker running on the Pi itself)</summary>
+
+The Pi GPIO UART is **3.3 V**, the heat pump is 5 V TTL, so a **logic-level
+shifter is mandatory**. The GPIO is also the natural host end of the RS485 run
+(RS485↔UART converter → level shifter → GPIO). Three steps:
+
+1. **Pick a hardware UART and its pins.** Use a real PL011, not the mini-UART on
+   `ttyS0` (its baud rate drifts with the core clock). On a Pi 4/5 the extra
+   PL011s map to fixed GPIO pairs (TXD/RXD), e.g. `uart2`→GPIO0/1,
+   `uart3`→GPIO4/5, `uart4`→GPIO8/9, `uart5`→GPIO12/13. Wire the heat-pump link
+   (via the level shifter) to one of those pairs — crossed, plus GND.
+2. **Enable that UART in the boot config.** Add `dtoverlay=uart3` (or whichever
+   you picked) to `/boot/firmware/config.txt` (older Raspberry Pi OS:
+   `/boot/config.txt`) and reboot.
+3. **Find the matching device node.** After reboot the UART appears as
+   `/dev/ttyAMAx`; confirm which node belongs to your overlay with
+   `dmesg | grep ttyAMA` or `ls -l /dev/serial*`, then enter that stable path in
+   the adapter config.
+
+See [Wiring](#wiring) for the exact connector pinouts (CN-CNT and CN-NMODE).
+</details>
 
 ## Wiring
 
 > ⚠️ **Measure twice, connect once.** Everything here is provided **without any warranty** and used **entirely at your own risk and liability.**
+
+> ☠️ **A wrong connection can kill the heat pump.** The CN-CNT / CN-NMODE RX/TX pins may run **straight to the heat pump's microcontroller**, with little or no protection in between. Note the **+5 V and +12 V pins sitting right next to the signal lines** in the tables below: brushing +12 V onto a signal pin, a reversed wire, or a ground / equalizing-current surge can **destroy that microcontroller and leave you with a dead mainboard.** Double-check every pin before powering anything on.
 
 The heat pump mainboard exposes two equivalent connectors that this adapter can use: **CN-CNT** and **CN-NMODE**. Either one works — pick whichever is easier to reach.
 
@@ -95,15 +185,6 @@ Both connectors carry a **5V TTL UART** signal, so a level shifter is required f
 | 2 | RX, 5V level (to the heat pump) |
 | 3 | TX, 5V level (from the heat pump) |
 | 4 | +5 V |
-
-### Connection variants
-
-- **Heat pump ↔ 5V-level USB-TTL UART converter ↔ PC**
-- **Heat pump ↔ RS232 transceiver ↔ USB/RS232 dongle ↔ PC**
-- **Heat pump ↔ level shifter (to 3.3V) ↔ UART-capable Raspberry Pi GPIO**
-- **Heat pump ↔ UART-to-RS485 converter ↔ long two-wire line, 120 Ω (don't forget the termination resistors!) ↔ UART-to-RS485 converter ↔ level shifter (to 3.3V) ↔ Pi GPIO**
-
-> If you are not familiar with **ground / equalizing currents** and how to handle them, always add **galvanic isolation** — on the USB side this is cheap and easy.
 
 Example — a UART-to-RS485 converter wired to the `CN-NMODE` connector (the heat-pump end of the RS485 long-distance variant):
 
